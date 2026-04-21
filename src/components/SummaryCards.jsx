@@ -6,7 +6,7 @@
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 import { formatCurrency } from '../services/calculations';
 
-export default function SummaryCards({ summary, loading }) {
+export default function SummaryCards({ summary, loading, insights = {} }) {
   const cards = [
     {
       label: 'Saldo Atual',
@@ -37,6 +37,25 @@ export default function SummaryCards({ summary, loading }) {
     },
   ];
 
+  const getInsightConfig = (insight) => {
+    if (!insight) return null;
+    const colors = {
+      positive: 'var(--accent-green)',
+      neutral: 'var(--text-muted)',
+      warning: 'var(--accent-red)',
+    };
+    return {
+      color: colors[insight.status] || colors.neutral,
+      arrow: insight.trend !== null ? (insight.trend >= 0 ? '↑' : '↓') : null,
+    };
+  };
+
+  const insightMap = {
+    'Saldo Atual': insights.balanceInsight,
+    'Total de Entradas': insights.incomeInsight,
+    'Total de Gastos': insights.expenseInsight,
+  };
+
   return (
     <div style={{
       display: 'grid',
@@ -44,56 +63,74 @@ export default function SummaryCards({ summary, loading }) {
       gap: 16,
       marginBottom: 24,
     }}>
-      {cards.map(({ label, value, icon: Icon, color, dim, glow, delay }) => (
-        <div
-          key={label}
-          className="card animate-fadeUp"
-          style={{
-            animationDelay: delay,
-            opacity: 0,
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
-          {/* Glow effect top bar */}
-          <div style={{
-            position: 'absolute',
-            top: 0, left: 0, right: 0,
-            height: 2,
-            background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
-          }} />
-
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              {label}
-            </span>
+      {cards.map(({ label, value, icon: Icon, color, dim, glow, delay }) => {
+        const insight = insightMap[label];
+        const ic = getInsightConfig(insight);
+        return (
+          <div
+            key={label}
+            className="card animate-fadeUp"
+            style={{
+              animationDelay: delay,
+              opacity: 0,
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Glow effect top bar */}
             <div style={{
-              width: 36, height: 36,
-              borderRadius: 'var(--radius-sm)',
-              background: dim,
-              border: `1px solid ${color}30`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Icon size={18} color={color} />
-            </div>
-          </div>
+              position: 'absolute',
+              top: 0, left: 0, right: 0,
+              height: 2,
+              background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
+            }} />
 
-          <div style={{
-            fontFamily: 'var(--font-mono)',
-            fontWeight: 500,
-            fontSize: loading ? 14 : 26,
-            color: loading ? 'var(--text-muted)' : color,
-            letterSpacing: '-0.5px',
-            lineHeight: 1,
-          }}>
-            {loading ? (
-              <div style={{ height: 26, width: 140, background: 'var(--bg-elevated)', borderRadius: 4, animation: 'pulse 1.5s ease infinite' }} />
-            ) : (
-              formatCurrency(value)
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                {label}
+              </span>
+              <div style={{
+                width: 36, height: 36,
+                borderRadius: 'var(--radius-sm)',
+                background: dim,
+                border: `1px solid ${color}30`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Icon size={18} color={color} />
+              </div>
+            </div>
+
+            <div style={{
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 500,
+              fontSize: loading ? 14 : 26,
+              color: loading ? 'var(--text-muted)' : color,
+              letterSpacing: '-0.5px',
+              lineHeight: 1,
+            }}>
+              {loading ? (
+                <div style={{ height: 26, width: 140, background: 'var(--bg-elevated)', borderRadius: 4, animation: 'pulse 1.5s ease infinite' }} />
+              ) : (
+                formatCurrency(value)
+              )}
+            </div>
+
+            {!loading && insight && (
+              <div style={{
+                marginTop: 8,
+                fontSize: 11,
+                color: ic?.color || 'var(--text-muted)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 3,
+              }}>
+                {ic?.arrow && <span style={{ fontWeight: 700 }}>{ic.arrow}</span>}
+                <span>{insight.text}</span>
+              </div>
             )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
