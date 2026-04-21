@@ -6,8 +6,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { TransactionProvider } from './context/TransactionContext';
 import Sidebar from './components/Sidebar';
-import Dashboard from './pages/Dashboard';
-import History from './pages/History';
+import FinanceDashboard from './pages/Finance/FinanceDashboard';
+import FinanceHistory from './pages/Finance/FinanceHistory';
 
 export default function App() {
   return (
@@ -17,8 +17,8 @@ export default function App() {
           <Sidebar />
           <main className="main-content">
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/history" element={<History />} />
+              <Route path="/finance" element={<FinanceDashboard />} />
+              <Route path="/finance/history" element={<FinanceHistory />} />
             </Routes>
           </main>
         </div>

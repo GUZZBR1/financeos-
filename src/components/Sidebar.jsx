@@ -9,8 +9,8 @@ import { useState } from 'react';
 import TransactionModal from './TransactionModal';
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/history', icon: History, label: 'Histórico' },
+  { to: '/finance', icon: LayoutDashboard, label: 'Finance' },
+  { to: '/finance/history', icon: History, label: 'Financial History' },
 ];
 
 export default function Sidebar() {
@@ -84,7 +84,7 @@ export default function Sidebar() {
             <NavLink
               key={to}
               to={to}
-              end={to === '/'}
+              end={to === '/finance'}
               style={({ isActive }) => ({
                 display: 'flex',
                 alignItems: 'center',
@@ -130,7 +130,7 @@ export default function Sidebar() {
           <NavLink
             key={to}
             to={to}
-            end={to === '/'}
+            end={to === '/finance'}
             style={({ isActive }) => ({
               display: 'flex',
               flexDirection: 'column',
