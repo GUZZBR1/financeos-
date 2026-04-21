@@ -7,20 +7,28 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint src --ext js,jsx"
+    "lint": "eslint src --ext js,jsx",
+    "test": "vitest",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
+    "date-fns": "^3.3.1",
+    "lucide-react": "^0.344.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.0",
-    "recharts": "^2.12.0",
-    "date-fns": "^3.3.1",
-    "lucide-react": "^0.344.0"
+    "recharts": "^2.12.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/react": "^18.2.56",
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.1.4"
+    "eslint": "^9.39.4",
+    "eslint-plugin-react": "^7.37.5",
+    "jsdom": "^29.0.2",
+    "vite": "^5.1.4",
+    "vitest": "^4.1.5"
   }
 }
