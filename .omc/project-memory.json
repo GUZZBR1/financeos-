@@ -1,0 +1,173 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1776810998005,
+  "projectRoot": "/home/gusta/projetos/financeos",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "react",
+        "version": "18.2.0",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "18.2.0",
+        "category": "frontend"
+      },
+      {
+        "name": "vite",
+        "version": "5.1.4",
+        "category": "build"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "vite",
+      "build": "vite build",
+      "preview": "vite preview"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": "type-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "src"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "dist": {
+      "path": "dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 1,
+      "lastAccessed": 1776810997992,
+      "keyFiles": [
+        "index.html"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 3,
+      "lastAccessed": 1776810997993,
+      "keyFiles": [
+        "App.jsx",
+        "index.css",
+        "main.jsx"
+      ]
+    },
+    "dist/assets": {
+      "path": "dist/assets",
+      "purpose": "Static assets",
+      "fileCount": 2,
+      "lastAccessed": 1776810998000,
+      "keyFiles": [
+        "index-BmuPGllJ.css",
+        "index-CO_PmpNn.js"
+      ]
+    },
+    "src/components": {
+      "path": "src/components",
+      "purpose": "UI components",
+      "fileCount": 6,
+      "lastAccessed": 1776810998001,
+      "keyFiles": [
+        "Charts.jsx",
+        "PeriodFilter.jsx",
+        "Sidebar.jsx"
+      ]
+    },
+    "src/pages": {
+      "path": "src/pages",
+      "purpose": "Page components",
+      "fileCount": 2,
+      "lastAccessed": 1776810998001,
+      "keyFiles": [
+        "Dashboard.jsx",
+        "History.jsx"
+      ]
+    },
+    "src/services": {
+      "path": "src/services",
+      "purpose": "Business logic services",
+      "fileCount": 2,
+      "lastAccessed": 1776810998002,
+      "keyFiles": [
+        "calculations.js",
+        "database.js"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src/modules/finance/services/financeActions.js",
+      "accessCount": 7,
+      "lastAccessed": 1776813997225,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Finance/FinanceDashboard.jsx",
+      "accessCount": 7,
+      "lastAccessed": 1776814002945,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Finance/FinanceHistory.jsx",
+      "accessCount": 4,
+      "lastAccessed": 1776814038946,
+      "type": "file"
+    },
+    {
+      "path": "src/modules/finance/services/financeAlerts.js",
+      "accessCount": 3,
+      "lastAccessed": 1776813573840,
+      "type": "file"
+    },
+    {
+      "path": "src/modules/finance/components/FinanceSignals.jsx",
+      "accessCount": 2,
+      "lastAccessed": 1776813584209,
+      "type": "file"
+    },
+    {
+      "path": "src/modules/finance/components/ActionResultPanel.jsx",
+      "accessCount": 1,
+      "lastAccessed": 1776813592653,
+      "type": "file"
+    },
+    {
+      "path": "src/modules/finance/services/financeHistoryUrlState.js",
+      "accessCount": 1,
+      "lastAccessed": 1776813986904,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
