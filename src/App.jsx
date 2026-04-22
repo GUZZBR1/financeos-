@@ -12,7 +12,7 @@ import FinanceHistory from './pages/Finance/FinanceHistory';
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <TransactionProvider>
         <Routes>
           <Route path="/" element={<Landing />} />
