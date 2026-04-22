@@ -6,7 +6,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, ArrowUpDown, X, LayoutList, TrendingDown, TrendingUp, Star } from 'lucide-react';
+import { Search, ArrowUpDown, X, LayoutList, TrendingDown, TrendingUp, Star, Bookmark, Trash2 } from 'lucide-react';
 import { useTransactions } from '../../context/TransactionContext';
 import {
   filterByPeriod,
@@ -14,6 +14,7 @@ import {
   PERIOD_FILTERS,
 } from '../../services/calculations';
 import { mergeFilterState, buildQueryString } from '../../modules/finance/services/financeHistoryUrlState';
+import { getSavedViews, saveView, deleteView } from '../../modules/finance/services/financeSavedViews';
 import PeriodFilter from '../../components/PeriodFilter';
 import TransactionRow from '../../components/TransactionRow';
 
@@ -38,6 +39,9 @@ export default function FinanceHistory() {
   const [categoryFilter, setCategoryFilter] = useState(filters.category);
   const [sortBy, setSortBy] = useState('date-desc');
   const [search, setSearch] = useState('');
+  const [savedViews, setSavedViews] = useState(() => getSavedViews());
+  const [saveInput, setSaveInput] = useState('');
+  const [showSaveInput, setShowSaveInput] = useState(false);
 
   // Sync type and category filters when URL changes
   useEffect(() => {
@@ -128,6 +132,27 @@ export default function FinanceHistory() {
     }
   };
 
+  // Saved views handlers
+  const applySavedView = (view) => {
+    setTypeFilter(view.filters.type);
+    setCategoryFilter(view.filters.category || '');
+  };
+
+  const handleSaveView = () => {
+    if (!saveInput.trim()) return;
+    const ok = saveView({ name: saveInput, filters: { type: typeFilter, category: categoryFilter } });
+    if (ok) {
+      setSavedViews(getSavedViews());
+      setSaveInput('');
+      setShowSaveInput(false);
+    }
+  };
+
+  const handleDeleteView = (id) => {
+    deleteView(id);
+    setSavedViews(getSavedViews());
+  };
+
   // Build context indicator message
   const contextMessage = useMemo(() => {
     const parts = [];
@@ -195,7 +220,7 @@ export default function FinanceHistory() {
       <div style={{
         display: 'flex',
         gap: 8,
-        marginBottom: 16,
+        marginBottom: 12,
         flexWrap: 'wrap',
         alignItems: 'center'
       }}>
@@ -229,6 +254,103 @@ export default function FinanceHistory() {
             {label}
           </button>
         ))}
+      </div>
+
+      {/* Saved Views */}
+      <div style={{
+        display: 'flex',
+        gap: 8,
+        marginBottom: 16,
+        flexWrap: 'wrap',
+        alignItems: 'center'
+      }}>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', marginRight: 4 }}>Saved Views:</span>
+
+        {savedViews.map((view) => (
+          <div
+            key={view.id}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              padding: '5px 8px 5px 10px',
+              borderRadius: '20px',
+              border: '1px solid rgba(99, 102, 241, 0.3)',
+              background: 'rgba(99, 102, 241, 0.05)',
+              color: 'var(--primary, #3b82f6)',
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'var(--font-display)',
+              transition: 'all var(--transition)',
+            }}
+            onClick={() => applySavedView(view)}
+          >
+            <Bookmark size={10} />
+            {view.name}
+            <span
+              onClick={(e) => { e.stopPropagation(); handleDeleteView(view.id); }}
+              style={{ marginLeft: 2, cursor: 'pointer', opacity: 0.7, lineHeight: 1 }}
+            >
+              <Trash2 size={10} />
+            </span>
+          </div>
+        ))}
+
+        {showSaveInput ? (
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            <input
+              type="text"
+              value={saveInput}
+              onChange={(e) => setSaveInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSaveView()}
+              placeholder="View name..."
+              autoFocus
+              style={{
+                padding: '5px 8px',
+                fontSize: 11,
+                border: '1px solid var(--border)',
+                borderRadius: '6px',
+                background: 'var(--bg-elevated)',
+                color: 'var(--text-primary)',
+                width: 120,
+              }}
+            />
+            <button
+              onClick={handleSaveView}
+              style={{ padding: '5px 8px', fontSize: 11, borderRadius: '6px', background: 'var(--primary, #3b82f6)', color: '#fff', border: 'none', cursor: 'pointer' }}
+            >
+              Save
+            </button>
+            <button
+              onClick={() => { setShowSaveInput(false); setSaveInput(''); }}
+              style={{ padding: '5px 8px', fontSize: 11, borderRadius: '6px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', cursor: 'pointer' }}
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowSaveInput(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              padding: '5px 10px',
+              borderRadius: '20px',
+              border: '1px dashed var(--border)',
+              background: 'transparent',
+              color: 'var(--text-muted)',
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'var(--font-display)',
+              transition: 'all var(--transition)',
+            }}
+          >
+            + Save current view
+          </button>
+        )}
       </div>
 
       {/* Filtros */}
