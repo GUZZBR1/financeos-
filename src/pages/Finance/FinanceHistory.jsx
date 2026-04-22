@@ -75,6 +75,32 @@ export default function FinanceHistory() {
     }
   }, []);
 
+  // Handle URL action params (one-time action execution)
+  const [actionContext, setActionContext] = useState(null);
+
+  useEffect(() => {
+    const urlAction = searchParams.get('action');
+    const urlSuggestedName = searchParams.get('suggestedName') || '';
+    const urlViewName = searchParams.get('viewName') || '';
+
+    if (!urlAction) return;
+
+    if (urlAction === 'save_view') {
+      setSaveInput(urlSuggestedName);
+      setShowSaveInput(true);
+    } else if (urlAction === 'open_saved_view') {
+      setActionContext(urlViewName ? `Opened from saved view: ${urlViewName}` : null);
+    }
+
+    // Clean action param from URL (one-time execution)
+    const params = new URLSearchParams(searchParams);
+    params.delete('action');
+    params.delete('suggestedName');
+    params.delete('viewName');
+    const cleanQs = params.toString() ? `?${params.toString()}` : '';
+    navigate(`${location.pathname}${cleanQs}`, { replace: true, preventScrollReset: true });
+  }, []);
+
   const handleCustomChange = (field, value) => {
     if (field === 'start') setCustomStart(value);
     else setCustomEnd(value);
@@ -473,7 +499,7 @@ export default function FinanceHistory() {
       </div>
 
       {/* Context indicator */}
-      {contextMessage && (
+      {(contextMessage || actionContext) && (
         <div style={{
           marginBottom: 12,
           padding: '8px 14px',
@@ -484,7 +510,7 @@ export default function FinanceHistory() {
           color: 'var(--primary, #3b82f6)',
           fontWeight: 500,
         }}>
-          {contextMessage}
+          {contextMessage || actionContext}
         </div>
       )}
 

@@ -124,31 +124,42 @@ export function handleStablePeriod() {
  * @param {Object} params
  * @param {string} params.viewId
  * @param {Object} params.filters - { type, category }
+ * @param {string} params.viewName - display name for context label
  * @returns {ActionResult}
  */
-export function handleOpenSavedView({ filters = {} } = {}) {
+export function handleOpenSavedView({ filters = {}, viewName = '' } = {}) {
   const qs = new URLSearchParams();
   if (filters.type && filters.type !== 'all') qs.set('type', filters.type);
   if (filters.category) qs.set('category', filters.category);
-  const queryString = qs.toString() ? `?${qs.toString()}` : '';
+  if (viewName) qs.set('viewName', viewName);
+  qs.set('action', 'open_saved_view');
   return {
     type: 'navigation',
     title: 'Open Saved View',
     message: 'Navigating to your saved view.',
-    navigateTo: `/finance/history${queryString}`,
+    navigateTo: `/finance/history?${qs.toString()}`,
   };
 }
 
 /**
- * Handle save view action (no-op placeholder — triggered when not on history page)
+ * Handle save view action
+ * @param {Object} params
+ * @param {string} params.category - category to prefill
+ * @param {string} params.type - type to prefill (default: expense)
+ * @param {string} params.suggestedName - suggested name for the view
  * @returns {ActionResult}
  */
-export function handleSaveViewAction() {
+export function handleSaveViewAction({ category = '', type = 'expense', suggestedName = '' } = {}) {
+  const qs = new URLSearchParams();
+  qs.set('type', type);
+  if (category) qs.set('category', category);
+  qs.set('action', 'save_view');
+  if (suggestedName) qs.set('suggestedName', suggestedName);
   return {
-    type: 'recommendation',
+    type: 'navigation',
     title: 'Save View',
-    message: 'Go to Finance History to save this filter as a view.',
-    navigateTo: '/finance/history',
+    message: 'Opening save view dialog.',
+    navigateTo: `/finance/history?${qs.toString()}`,
   };
 }
 

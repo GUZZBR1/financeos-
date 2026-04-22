@@ -53,7 +53,7 @@ export function generateRecommendations({ topCategory, alerts = [] } = {}) {
         action: {
           label: 'Save view',
           type: 'save_view',
-          payload: { category: topCategory[0] },
+          payload: { category: topCategory[0], suggestedName: `${topCategory[0]} Expenses` },
         },
       });
     }
@@ -74,7 +74,7 @@ export function generateRecommendations({ topCategory, alerts = [] } = {}) {
           action: {
             label: 'Open saved view',
             type: 'open_saved_view',
-            payload: { viewId: mostUsedView.id, filters: mostUsedView.filters },
+            payload: { viewId: mostUsedView.id, filters: mostUsedView.filters, viewName: mostUsedView.name },
           },
         });
       }
@@ -109,7 +109,7 @@ export function generateRecommendations({ topCategory, alerts = [] } = {}) {
           action: {
             label: 'Save view',
             type: 'save_view',
-            payload: { category: mostViewedCat[0] },
+            payload: { category: mostViewedCat[0], suggestedName: `${mostViewedCat[0]} Expenses` },
           },
         });
       }
