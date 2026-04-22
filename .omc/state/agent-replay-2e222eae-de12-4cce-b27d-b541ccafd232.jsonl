@@ -1,7 +1,0 @@
-{"t":0,"agent":"acb8bae","agent_type":"unknown","event":"agent_stop","success":true}
-{"t":0,"agent":"abbbf2a","agent_type":"unknown","event":"agent_stop","success":true}
-{"t":0,"agent":"a78857f","agent_type":"unknown","event":"agent_stop","success":true}
-{"t":0,"agent":"system","event":"keyword_detected","keyword":"ai-slop-cleaner"}
-{"t":0,"agent":"aa094d7","agent_type":"executor","event":"agent_start","parent_mode":"none"}
-{"t":0,"agent":"aa094d7","agent_type":"executor","event":"agent_stop","success":true,"duration_ms":144534}
-{"t":0,"agent":"system","event":"keyword_detected","keyword":"deep-interview"}
