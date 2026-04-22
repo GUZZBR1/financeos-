@@ -1,53 +1,92 @@
 /**
  * context/TransactionContext.jsx
  * Estado global da aplicação via React Context.
- * Centraliza todas as operações de transação e re-renderização automática.
+ * Transações agora vêm do Supabase para usuários autenticados.
+ * localStorage foi removido da camada de transações.
  */
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useAuth } from './AuthContext';
 import {
-  getAllTransactions,
-  saveTransaction,
-  deleteTransaction,
-  seedDemoData,
-} from '../services/database';
+  getTransactions,
+  createTransaction as svcCreateTransaction,
+  deleteTransaction as svcDeleteTransaction,
+} from '../services/transactionService';
 
 const TransactionContext = createContext(null);
 
 export const TransactionProvider = ({ children }) => {
+  const { user } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Carrega dados iniciais
+  // Load transactions when user authenticates; clear when they log out
   useEffect(() => {
-    seedDemoData(); // Popula com dados de demo na primeira vez
-    const data = getAllTransactions();
-    // Ordena por data desc
-    setTransactions(data.sort((a, b) => new Date(b.date) - new Date(a.date)));
-    setLoading(false);
-  }, []);
+    if (!user) {
+      setTransactions([]);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getTransactions(user.id);
+        if (!cancelled) {
+          setTransactions(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.message);
+          setTransactions([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    load();
+
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   /**
-   * Adiciona uma nova transação e re-sincroniza o estado
+   * Adiciona uma nova transação no Supabase e atualiza o estado local.
+   * Só executa para usuários autenticados.
    */
-  const addTransaction = useCallback((transaction) => {
-    const saved = saveTransaction(transaction);
-    setTransactions((prev) =>
-      [saved, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date))
-    );
-    return saved;
-  }, []);
+  const addTransaction = useCallback(
+    async (transaction) => {
+      if (!user) return null;
+      const saved = await svcCreateTransaction(user.id, transaction);
+      setTransactions((prev) =>
+        [saved, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date))
+      );
+      return saved;
+    },
+    [user]
+  );
 
   /**
-   * Remove uma transação pelo ID
+   * Remove uma transação do Supabase e atualiza o estado local.
+   * Só executa para usuários autenticados.
    */
-  const removeTransaction = useCallback((id) => {
-    deleteTransaction(id);
-    setTransactions((prev) => prev.filter((t) => t.id !== id));
-  }, []);
+  const removeTransaction = useCallback(
+    async (id) => {
+      if (!user) return;
+      await svcDeleteTransaction(user.id, id);
+      setTransactions((prev) => prev.filter((t) => t.id !== id));
+    },
+    [user]
+  );
 
   return (
-    <TransactionContext.Provider value={{ transactions, addTransaction, removeTransaction, loading }}>
+    <TransactionContext.Provider value={{ transactions, addTransaction, removeTransaction, loading, error }}>
       {children}
     </TransactionContext.Provider>
   );

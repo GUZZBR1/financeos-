@@ -4,8 +4,10 @@
  */
 
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, History, Plus, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, History, Plus, TrendingUp, LogOut } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import TransactionModal from './TransactionModal';
 
 const navItems = [
@@ -14,7 +16,14 @@ const navItems = [
 ];
 
 export default function Sidebar() {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   return (
     <>
@@ -107,7 +116,33 @@ export default function Sidebar() {
         </nav>
 
         {/* Footer */}
-        <div style={{ marginTop: 'auto', padding: '12px', borderTop: '1px solid var(--border)' }}>
+        <div style={{ marginTop: 'auto', padding: '12px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {user && (
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 2 }}>
+              {user.email}
+            </div>
+          )}
+          <button
+            onClick={handleSignOut}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              padding: '6px 10px',
+              borderRadius: 6,
+              border: '1px solid var(--border)',
+              background: 'transparent',
+              color: 'var(--text-muted)',
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all var(--transition)',
+            }}
+          >
+            <LogOut size={12} />
+            Sign out
+          </button>
           <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>
             FinanceOS v1.0
           </p>
