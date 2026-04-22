@@ -22,7 +22,7 @@ export const getPreviousPeriodRange = (period, customStart, customEnd) => {
  * @returns {{ balanceInsight, incomeInsight, expenseInsight }}
  */
 export const generateInsights = (transactions, currentPeriod, customStart, customEnd) => {
-  const { start: currStart, end: currEnd } = getDateRange(currentPeriod, customStart, customEnd);
+  getDateRange(currentPeriod, customStart, customEnd);
   const { start: prevStart, end: prevEnd } = getPreviousPeriodRange(currentPeriod, customStart, customEnd);
 
   const currentTx = filterByPeriod(transactions, currentPeriod, customStart, customEnd);

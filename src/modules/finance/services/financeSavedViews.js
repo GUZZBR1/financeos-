@@ -25,18 +25,18 @@ export function getSavedViews() {
  * Save a new view or update existing one.
  * Enforces max limit and duplicate name check.
  * @param {{ name: string, filters: { type: string, category: string } }} view
- * @returns {boolean} success
+ * @returns {{ ok: boolean, reason?: 'duplicate' | 'invalid' | 'limit' }}
  */
 export function saveView({ name, filters }) {
-  if (!name.trim()) return false;
+  if (!name.trim()) return { ok: false, reason: 'invalid' };
 
   const views = getSavedViews();
 
   // Duplicate check
-  if (views.some(v => v.name === name.trim())) return false;
+  if (views.some(v => v.name === name.trim())) return { ok: false, reason: 'duplicate' };
 
   // Limit check
-  if (views.length >= MAX_VIEWS) return false;
+  if (views.length >= MAX_VIEWS) return { ok: false, reason: 'limit' };
 
   views.push({
     id: `view-${Date.now()}`,
@@ -45,7 +45,7 @@ export function saveView({ name, filters }) {
   });
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(views));
-  return true;
+  return { ok: true };
 }
 
 /**

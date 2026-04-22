@@ -3,7 +3,6 @@
  * Seletor de período para filtrar dados do dashboard e histórico.
  */
 
-import { useState } from 'react';
 import { PERIOD_FILTERS, PERIOD_LABELS } from '../services/calculations';
 import { CalendarDays } from 'lucide-react';
 

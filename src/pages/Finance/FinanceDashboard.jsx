@@ -3,7 +3,7 @@
  * Página principal do departamento de finanças com métricas, filtros de período e gráficos interativos.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTransactions } from '../../context/TransactionContext';
@@ -97,7 +97,7 @@ export default function FinanceDashboard() {
   }, []);
 
   // Track pattern events from alerts
-  useMemo(() => {
+  useEffect(() => {
     const hasNegativeBalance = alerts.some(a => a.id === 'negative-balance');
     const hasExpenseSpike = alerts.some(a => a.id === 'expenses-spike');
     if (hasNegativeBalance) trackEvent('negativeBalance');
