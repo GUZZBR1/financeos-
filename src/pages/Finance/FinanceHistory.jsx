@@ -4,7 +4,7 @@
  * Filtros sincronizados com URL (query params), com fallback para location.state.
  */
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, ArrowUpDown, X, LayoutList, TrendingDown, TrendingUp, Star, Bookmark, Trash2 } from 'lucide-react';
 import { useTransactions } from '../../context/TransactionContext';
@@ -43,6 +43,7 @@ export default function FinanceHistory() {
   const [savedViews, setSavedViews] = useState(() => getSavedViews());
   const [saveInput, setSaveInput] = useState('');
   const [showSaveInput, setShowSaveInput] = useState(false);
+  const [saveFeedback, setSaveFeedback] = useState('');
 
   // Sync type and category filters when URL changes
   useEffect(() => {
@@ -50,14 +51,16 @@ export default function FinanceHistory() {
     setCategoryFilter(filters.category);
   }, [filters.type, filters.category]);
 
-  // Track category views for memory
+  // Track category views for memory (skip mount to avoid taint from URL state init)
+  const categoryTrackRef = useRef(false);
   useEffect(() => {
+    if (!categoryTrackRef.current) { categoryTrackRef.current = true; return; }
     if (categoryFilter) {
       trackEvent('categoryView', { category: categoryFilter });
     }
   }, [categoryFilter]);
 
-  // Sync URL when filters change
+  // Sync URL when filters change (only when actually different to avoid loops)
   useEffect(() => {
     const newState = {
       type: typeFilter,
@@ -65,7 +68,11 @@ export default function FinanceHistory() {
     };
     const qs = buildQueryString(newState);
     const base = location.pathname;
-    navigate(`${base}${qs}`, { replace: true, preventScrollReset: true });
+    const target = `${base}${qs}`;
+    // Avoid redundant navigate when URL is already correct
+    if (window.location.pathname + window.location.search !== target) {
+      navigate(target, { replace: true, preventScrollReset: true });
+    }
   }, [typeFilter, categoryFilter]);
 
   // Clear location state after reading (prevents stale filters on back navigation)
@@ -131,11 +138,13 @@ export default function FinanceHistory() {
     return Array.from(cats).sort();
   }, [transactions]);
 
-  // Reset all filters and URL
+  // Reset all filters and URL to consistent clean state
   const resetFilters = () => {
     setTypeFilter('all');
     setCategoryFilter('');
     setSearch('');
+    // Directly navigate to clean URL (period/search are local-only, no URL sync needed)
+    navigate(location.pathname, { replace: true, preventScrollReset: true });
   };
 
   const hasActiveFilters = typeFilter !== 'all' || categoryFilter !== '' || search.trim();
@@ -174,12 +183,22 @@ export default function FinanceHistory() {
   };
 
   const handleSaveView = () => {
-    if (!saveInput.trim()) return;
-    const ok = saveView({ name: saveInput, filters: { type: typeFilter, category: categoryFilter } });
-    if (ok) {
+    if (!saveInput.trim()) {
+      setSaveFeedback('Please enter a name');
+      setTimeout(() => setSaveFeedback(''), 3000);
+      return;
+    }
+    const result = saveView({ name: saveInput, filters: { type: typeFilter, category: categoryFilter } });
+    if (result.ok) {
       setSavedViews(getSavedViews());
       setSaveInput('');
       setShowSaveInput(false);
+      setSaveFeedback('');
+    } else {
+      if (result.reason === 'duplicate') setSaveFeedback('A view with this name already exists');
+      else if (result.reason === 'limit') setSaveFeedback('Maximum 10 views reached');
+      else setSaveFeedback('Failed to save view');
+      setTimeout(() => setSaveFeedback(''), 3000);
     }
   };
 
@@ -334,23 +353,30 @@ export default function FinanceHistory() {
 
         {showSaveInput ? (
           <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-            <input
-              type="text"
-              value={saveInput}
-              onChange={(e) => setSaveInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSaveView()}
-              placeholder="View name..."
-              autoFocus
-              style={{
-                padding: '5px 8px',
-                fontSize: 11,
-                border: '1px solid var(--border)',
-                borderRadius: '6px',
-                background: 'var(--bg-elevated)',
-                color: 'var(--text-primary)',
-                width: 120,
-              }}
-            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <input
+                type="text"
+                value={saveInput}
+                onChange={(e) => setSaveInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSaveView()}
+                placeholder="View name..."
+                autoFocus
+                style={{
+                  padding: '5px 8px',
+                  fontSize: 11,
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                  background: 'var(--bg-elevated)',
+                  color: 'var(--text-primary)',
+                  width: 120,
+                }}
+              />
+              {saveFeedback && (
+                <span style={{ fontSize: 10, color: saveFeedback.includes('exists') || saveFeedback.includes('Maximum') ? 'var(--accent-red)' : 'var(--text-muted)' }}>
+                  {saveFeedback}
+                </span>
+              )}
+            </div>
             <button
               onClick={handleSaveView}
               style={{ padding: '5px 8px', fontSize: 11, borderRadius: '6px', background: 'var(--primary, #3b82f6)', color: '#fff', border: 'none', cursor: 'pointer' }}

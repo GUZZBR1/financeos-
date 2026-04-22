@@ -3,7 +3,7 @@
  * Navegação lateral da aplicação com links e indicadores visuais.
  */
 
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, History, Plus, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import TransactionModal from './TransactionModal';

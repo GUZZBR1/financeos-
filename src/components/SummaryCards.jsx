@@ -63,7 +63,7 @@ export default function SummaryCards({ summary, loading, insights = {} }) {
       gap: 16,
       marginBottom: 24,
     }}>
-      {cards.map(({ label, value, icon: Icon, color, dim, glow, delay }) => {
+      {cards.map(({ label, value, icon: Icon, color, dim, delay }) => {
         const insight = insightMap[label];
         const ic = getInsightConfig(insight);
         return (

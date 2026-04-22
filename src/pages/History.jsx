@@ -4,7 +4,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Search, ArrowUpDown, SlidersHorizontal } from 'lucide-react';
+import { Search, ArrowUpDown } from 'lucide-react';
 import { useTransactions } from '../context/TransactionContext';
 import {
   filterByPeriod,

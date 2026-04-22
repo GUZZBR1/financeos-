@@ -41,6 +41,7 @@ export function buildQueryString(state) {
 /**
  * Merge location.state with URL params.
  * URL params take priority over location.state.
+ * Priority: query params > location.state > defaults
  * @param {URLSearchParams} searchParams
  * @param {{ type?: string, category?: string }} locationState
  * @returns {{ type: string, category: string }}
@@ -48,8 +49,15 @@ export function buildQueryString(state) {
 export function mergeFilterState(searchParams, locationState = {}) {
   const urlState = parseUrlState(searchParams);
 
-  return {
-    type: urlState.type,
-    category: urlState.category || locationState.category || '',
-  };
+  // URL has explicit type → use it; otherwise fall back to locationState.type; otherwise 'all'
+  const type = searchParams.has('type')
+    ? urlState.type
+    : (locationState.type || 'all');
+
+  // URL has explicit category → use it; otherwise fall back to locationState.category; otherwise ''
+  const category = searchParams.has('category')
+    ? urlState.category
+    : (locationState.category || '');
+
+  return { type, category };
 }
