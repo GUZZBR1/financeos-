@@ -22,6 +22,7 @@ import { generateAlertsAndSuggestions } from '../../modules/finance/services/fin
 import { executeAction } from '../../modules/finance/services/financeActions';
 import { trackEvent, generateRecurringInsights } from '../../modules/finance/services/financeMemory';
 import { getSavedViews } from '../../modules/finance/services/financeSavedViews';
+import { generateRecommendations } from '../../modules/finance/services/financeRecommendations';
 
 import SummaryCards from '../../components/SummaryCards';
 import PeriodFilter from '../../components/PeriodFilter';
@@ -104,6 +105,25 @@ export default function FinanceDashboard() {
       trackEvent('expenseSpike', { category: topCategory[0] });
     }
   }, [alerts, topCategory]);
+
+  // Generate proactive recommendations from memory + context
+  const recommendations = useMemo(() => {
+    return generateRecommendations({ topCategory, alerts });
+  }, [topCategory, alerts]);
+
+  // Handle recommendation action (reuses existing action system)
+  const handleRecommendationAction = (rec) => {
+    const result = executeAction(rec.action.type, {
+      topCategory,
+      categoryName: topCategory?.[0],
+      ...rec.action.payload,
+    });
+    if (result.type === 'navigation') {
+      navigate(result.navigateTo || '/finance/history');
+      return;
+    }
+    setActionResult(result);
+  };
 
   const handleCustomChange = (field, value) => {
     if (field === 'start') setCustomStart(value);
@@ -206,6 +226,68 @@ export default function FinanceDashboard() {
                   flexShrink: 0,
                 }} />
                 {insight.text}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Proactive Recommendations */}
+      {recommendations.length > 0 && (
+        <div style={{
+          background: 'rgba(34, 197, 94, 0.05)',
+          border: '1px solid rgba(34, 197, 94, 0.15)',
+          borderRadius: '12px',
+          padding: '14px 16px',
+          marginBottom: 16,
+        }}>
+          <div style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: 'rgba(34, 197, 94, 0.7)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            marginBottom: 10,
+          }}>
+            Next Steps
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {recommendations.map((rec) => (
+              <div key={rec.id} style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12,
+                padding: '8px 10px',
+                background: 'rgba(255,255,255,0.4)',
+                borderRadius: '8px',
+                border: '1px solid rgba(34, 197, 94, 0.1)',
+              }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>
+                    {rec.title}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {rec.message}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleRecommendationAction(rec)}
+                  style={{
+                    padding: '5px 10px',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: '#16a34a',
+                    background: 'rgba(34, 197, 94, 0.1)',
+                    border: '1px solid rgba(34, 197, 94, 0.2)',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {rec.action.label}
+                </button>
               </div>
             ))}
           </div>

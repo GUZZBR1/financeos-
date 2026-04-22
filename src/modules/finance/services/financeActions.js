@@ -120,6 +120,39 @@ export function handleStablePeriod() {
 }
 
 /**
+ * Handle open saved view action
+ * @param {Object} params
+ * @param {string} params.viewId
+ * @param {Object} params.filters - { type, category }
+ * @returns {ActionResult}
+ */
+export function handleOpenSavedView({ filters = {} } = {}) {
+  const qs = new URLSearchParams();
+  if (filters.type && filters.type !== 'all') qs.set('type', filters.type);
+  if (filters.category) qs.set('category', filters.category);
+  const queryString = qs.toString() ? `?${qs.toString()}` : '';
+  return {
+    type: 'navigation',
+    title: 'Open Saved View',
+    message: 'Navigating to your saved view.',
+    navigateTo: `/finance/history${queryString}`,
+  };
+}
+
+/**
+ * Handle save view action (no-op placeholder — triggered when not on history page)
+ * @returns {ActionResult}
+ */
+export function handleSaveViewAction() {
+  return {
+    type: 'recommendation',
+    title: 'Save View',
+    message: 'Go to Finance History to save this filter as a view.',
+    navigateTo: '/finance/history',
+  };
+}
+
+/**
  * Map action type string to handler function
  * @param {string} actionType
  * @param {Object} params - Parameters to pass to the handler
@@ -134,6 +167,8 @@ export function executeAction(actionType, params = {}) {
     filter_category: () => handleReviewTopCategory(params),
     see_overview: () => handleStablePeriod(),
     review_negative: () => handleNegativeBalance(),
+    open_saved_view: () => handleOpenSavedView(params),
+    save_view: () => handleSaveViewAction(),
   };
 
   const handler = handlers[actionType];
