@@ -15,6 +15,7 @@ import {
 } from '../../services/calculations';
 import { mergeFilterState, buildQueryString } from '../../modules/finance/services/financeHistoryUrlState';
 import { getSavedViews, saveView, deleteView } from '../../modules/finance/services/financeSavedViews';
+import { trackEvent } from '../../modules/finance/services/financeMemory';
 import PeriodFilter from '../../components/PeriodFilter';
 import TransactionRow from '../../components/TransactionRow';
 
@@ -48,6 +49,13 @@ export default function FinanceHistory() {
     setTypeFilter(filters.type);
     setCategoryFilter(filters.category);
   }, [filters.type, filters.category]);
+
+  // Track category views for memory
+  useEffect(() => {
+    if (categoryFilter) {
+      trackEvent('categoryView', { category: categoryFilter });
+    }
+  }, [categoryFilter]);
 
   // Sync URL when filters change
   useEffect(() => {
@@ -136,6 +144,7 @@ export default function FinanceHistory() {
   const applySavedView = (view) => {
     setTypeFilter(view.filters.type);
     setCategoryFilter(view.filters.category || '');
+    trackEvent('savedViewClick', { viewId: view.id });
   };
 
   const handleSaveView = () => {
