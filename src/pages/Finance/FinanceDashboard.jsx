@@ -19,7 +19,10 @@ import { generateInsights } from '../../modules/finance/services/financeInsights
 import FinanceSignals from '../../modules/finance/components/FinanceSignals';
 import ActionResultPanel from '../../modules/finance/components/ActionResultPanel';
 import { generateAlertsAndSuggestions } from '../../modules/finance/services/financeAlerts';
-import { executeAction, handleExpensesSpike } from '../../modules/finance/services/financeActions';
+import { executeAction } from '../../modules/finance/services/financeActions';
+import { trackEvent, generateRecurringInsights } from '../../modules/finance/services/financeMemory';
+import { getSavedViews } from '../../modules/finance/services/financeSavedViews';
+import { generateRecommendations } from '../../modules/finance/services/financeRecommendations';
 
 import SummaryCards from '../../components/SummaryCards';
 import PeriodFilter from '../../components/PeriodFilter';
@@ -88,6 +91,40 @@ export default function FinanceDashboard() {
     [transactions, period, customStart, customEnd]
   );
 
+  // Generate recurring insights from memory
+  const recurringInsights = useMemo(() => {
+    return generateRecurringInsights(getSavedViews());
+  }, []);
+
+  // Track pattern events from alerts
+  useMemo(() => {
+    const hasNegativeBalance = alerts.some(a => a.id === 'negative-balance');
+    const hasExpenseSpike = alerts.some(a => a.id === 'expenses-spike');
+    if (hasNegativeBalance) trackEvent('negativeBalance');
+    if (hasExpenseSpike && topCategory) {
+      trackEvent('expenseSpike', { category: topCategory[0] });
+    }
+  }, [alerts, topCategory]);
+
+  // Generate proactive recommendations from memory + context
+  const recommendations = useMemo(() => {
+    return generateRecommendations({ topCategory, alerts });
+  }, [topCategory, alerts]);
+
+  // Handle recommendation action (reuses existing action system)
+  const handleRecommendationAction = (rec) => {
+    const result = executeAction(rec.action.type, {
+      topCategory,
+      categoryName: topCategory?.[0],
+      ...rec.action.payload,
+    });
+    if (result.type === 'navigation') {
+      navigate(result.navigateTo || '/finance/history');
+      return;
+    }
+    setActionResult(result);
+  };
+
   const handleCustomChange = (field, value) => {
     if (field === 'start') setCustomStart(value);
     else setCustomEnd(value);
@@ -152,6 +189,110 @@ export default function FinanceDashboard() {
         suggestions={suggestions}
         onAction={handleSignalAction}
       />
+
+      {/* Recurring Insights */}
+      {recurringInsights.length > 0 && (
+        <div style={{
+          background: 'rgba(99, 102, 241, 0.05)',
+          border: '1px solid rgba(99, 102, 241, 0.15)',
+          borderRadius: '12px',
+          padding: '14px 16px',
+          marginBottom: 16,
+        }}>
+          <div style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: 'rgba(99, 102, 241, 0.7)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            marginBottom: 10,
+          }}>
+            Behavior Insights
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {recurringInsights.map((insight, idx) => (
+              <div key={idx} style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                fontSize: 13,
+                color: 'var(--text-secondary)',
+              }}>
+                <span style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  background: insight.type === 'warning' ? '#f59e0b' : insight.type === 'pattern' ? '#8b5cf6' : '#3b82f6',
+                  flexShrink: 0,
+                }} />
+                {insight.text}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Proactive Recommendations */}
+      {recommendations.length > 0 && (
+        <div style={{
+          background: 'rgba(34, 197, 94, 0.05)',
+          border: '1px solid rgba(34, 197, 94, 0.15)',
+          borderRadius: '12px',
+          padding: '14px 16px',
+          marginBottom: 16,
+        }}>
+          <div style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: 'rgba(34, 197, 94, 0.7)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            marginBottom: 10,
+          }}>
+            Next Steps
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {recommendations.map((rec) => (
+              <div key={rec.id} style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12,
+                padding: '8px 10px',
+                background: 'rgba(255,255,255,0.4)',
+                borderRadius: '8px',
+                border: '1px solid rgba(34, 197, 94, 0.1)',
+              }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>
+                    {rec.title}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {rec.message}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleRecommendationAction(rec)}
+                  style={{
+                    padding: '5px 10px',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: '#16a34a',
+                    background: 'rgba(34, 197, 94, 0.1)',
+                    border: '1px solid rgba(34, 197, 94, 0.2)',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {rec.action.label}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Action Result Panel */}
       <ActionResultPanel

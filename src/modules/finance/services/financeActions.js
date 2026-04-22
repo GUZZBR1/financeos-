@@ -120,6 +120,50 @@ export function handleStablePeriod() {
 }
 
 /**
+ * Handle open saved view action
+ * @param {Object} params
+ * @param {string} params.viewId
+ * @param {Object} params.filters - { type, category }
+ * @param {string} params.viewName - display name for context label
+ * @returns {ActionResult}
+ */
+export function handleOpenSavedView({ filters = {}, viewName = '' } = {}) {
+  const qs = new URLSearchParams();
+  if (filters.type && filters.type !== 'all') qs.set('type', filters.type);
+  if (filters.category) qs.set('category', filters.category);
+  if (viewName) qs.set('viewName', viewName);
+  qs.set('action', 'open_saved_view');
+  return {
+    type: 'navigation',
+    title: 'Open Saved View',
+    message: 'Navigating to your saved view.',
+    navigateTo: `/finance/history?${qs.toString()}`,
+  };
+}
+
+/**
+ * Handle save view action
+ * @param {Object} params
+ * @param {string} params.category - category to prefill
+ * @param {string} params.type - type to prefill (default: expense)
+ * @param {string} params.suggestedName - suggested name for the view
+ * @returns {ActionResult}
+ */
+export function handleSaveViewAction({ category = '', type = 'expense', suggestedName = '' } = {}) {
+  const qs = new URLSearchParams();
+  qs.set('type', type);
+  if (category) qs.set('category', category);
+  qs.set('action', 'save_view');
+  if (suggestedName) qs.set('suggestedName', suggestedName);
+  return {
+    type: 'navigation',
+    title: 'Save View',
+    message: 'Opening save view dialog.',
+    navigateTo: `/finance/history?${qs.toString()}`,
+  };
+}
+
+/**
  * Map action type string to handler function
  * @param {string} actionType
  * @param {Object} params - Parameters to pass to the handler
@@ -134,6 +178,8 @@ export function executeAction(actionType, params = {}) {
     filter_category: () => handleReviewTopCategory(params),
     see_overview: () => handleStablePeriod(),
     review_negative: () => handleNegativeBalance(),
+    open_saved_view: () => handleOpenSavedView(params),
+    save_view: () => handleSaveViewAction(),
   };
 
   const handler = handlers[actionType];
