@@ -154,12 +154,42 @@ npm run preview
 
 ## Roadmap
 
-- [ ] **Multi-user support** — team access and role-based permissions
 - [ ] **Backend integration** — REST API replacing localStorage
-- [ ] **AI-powered recommendations** — smarter savings and expense insights
-- [ ] **Saved Views** — persistent user-defined filter presets
-- [ ] **Advanced automation** — recurring transaction rules and scheduled alerts
+- [x] **AI-powered recommendations** — smarter savings and expense insights
+- [x] **Saved Views** — persistent user-defined filter presets
+- [x] **Advanced automation** — recurring transaction rules and scheduled alerts
 - [ ] **Export & reports** — PDF/CSV generation for stakeholders
+
+---
+
+## Deploy
+
+The app is deployed via GitHub Actions CI/CD on every push to `main`.
+
+**Live URL:** https://GUZZBR1.github.io/financeos-/
+
+To deploy manually:
+
+```bash
+npm run build
+# dist/ folder is ready to serve on GitHub Pages, Vercel, Netlify, etc.
+```
+
+---
+
+## Try it here
+
+**App:** https://GUZZBR1.github.io/financeos-/
+
+**Quick start:**
+
+```bash
+npm install
+npm run dev
+# Open http://localhost:5173
+```
+
+The app ships with 18 demo transactions so you can explore all features immediately after install.
 
 ---
 
