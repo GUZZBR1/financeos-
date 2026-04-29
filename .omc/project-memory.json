@@ -157,9 +157,21 @@
       "type": "file"
     },
     {
+      "path": "src/components/Sidebar.jsx",
+      "accessCount": 7,
+      "lastAccessed": 1776824680536,
+      "type": "file"
+    },
+    {
       "path": "src/modules/finance/services/financeRecommendations.js",
       "accessCount": 6,
       "lastAccessed": 1776821555449,
+      "type": "file"
+    },
+    {
+      "path": "src/App.jsx",
+      "accessCount": 6,
+      "lastAccessed": 1776824641670,
       "type": "file"
     },
     {
@@ -187,21 +199,15 @@
       "type": "file"
     },
     {
-      "path": "src/App.jsx",
-      "accessCount": 4,
-      "lastAccessed": 1776823472931,
-      "type": "file"
-    },
-    {
       "path": "src/tests/setup.js",
       "accessCount": 3,
       "lastAccessed": 1776815750303,
       "type": "file"
     },
     {
-      "path": "src/components/Sidebar.jsx",
+      "path": "src/context/TransactionContext.jsx",
       "accessCount": 3,
-      "lastAccessed": 1776821572224,
+      "lastAccessed": 1776824918224,
       "type": "file"
     },
     {
@@ -247,6 +253,18 @@
       "type": "file"
     },
     {
+      "path": "src/pages/Login.jsx",
+      "accessCount": 2,
+      "lastAccessed": 1776824709432,
+      "type": "file"
+    },
+    {
+      "path": "src/services/database.js",
+      "accessCount": 2,
+      "lastAccessed": 1776824871815,
+      "type": "file"
+    },
+    {
       "path": "src/modules/finance/components/ActionResultPanel.jsx",
       "accessCount": 1,
       "lastAccessed": 1776813592653,
@@ -283,21 +301,45 @@
       "type": "file"
     },
     {
-      "path": "src/context/TransactionContext.jsx",
-      "accessCount": 1,
-      "lastAccessed": 1776821555405,
-      "type": "file"
-    },
-    {
       "path": "src/services/calculations.js",
       "accessCount": 1,
       "lastAccessed": 1776821566423,
       "type": "file"
     },
     {
-      "path": "src/services/database.js",
+      "path": "src/lib/supabase.js",
       "accessCount": 1,
-      "lastAccessed": 1776821566441,
+      "lastAccessed": 1776824564063,
+      "type": "file"
+    },
+    {
+      "path": "src/context/AuthContext.jsx",
+      "accessCount": 1,
+      "lastAccessed": 1776824576188,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Signup.jsx",
+      "accessCount": 1,
+      "lastAccessed": 1776824619860,
+      "type": "file"
+    },
+    {
+      "path": "src/components/ProtectedRoute.jsx",
+      "accessCount": 1,
+      "lastAccessed": 1776824629840,
+      "type": "file"
+    },
+    {
+      "path": ".env.example",
+      "accessCount": 1,
+      "lastAccessed": 1776824654618,
+      "type": "file"
+    },
+    {
+      "path": "src/services/transactionService.js",
+      "accessCount": 1,
+      "lastAccessed": 1776824895930,
       "type": "file"
     }
   ],
