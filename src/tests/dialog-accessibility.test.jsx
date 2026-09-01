@@ -27,6 +27,7 @@ describe('acessibilidade dos diálogos', () => {
     }
     render(<Harness />);
     const trigger = screen.getByRole('button', { name: 'Abrir cadastro' });
+    trigger.focus();
     fireEvent.click(trigger);
     const dialog = screen.getByRole('dialog', { name: /nova transação/i });
     const value = dialog.querySelector('#transaction-value');

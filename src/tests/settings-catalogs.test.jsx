@@ -8,7 +8,8 @@ vi.mock('../services/platform-api', () => ({ platformApi: mocks.api }));
 vi.mock('../context/TransactionContext', () => ({ useTransactions: () => mocks.context }));
 
 beforeEach(() => {
-  mocks.api = {
+  Object.keys(mocks.api).forEach((key) => delete mocks.api[key]);
+  Object.assign(mocks.api, {
     getAppInfo: vi.fn().mockResolvedValue({ desktop: true, dataPath: 'dados' }),
     listAccounts: vi.fn().mockResolvedValue([]),
     getAiConfig: vi.fn().mockResolvedValue({ configured: true, hasApiKey: true, apiKey: 'segredo-da-api', baseUrl: 'https://api.test/v1', model: 'modelo' }),
@@ -17,7 +18,7 @@ beforeEach(() => {
     saveAiConfig: vi.fn(),
     createAccount: vi.fn(),
     createCategory: vi.fn(),
-  };
+  });
   mocks.context = { accounts: [], categories: [], desktop: true, refresh: vi.fn().mockResolvedValue({ ok: true }) };
 });
 

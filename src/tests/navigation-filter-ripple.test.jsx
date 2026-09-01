@@ -13,13 +13,15 @@ vi.mock('../context/TransactionContext', () => ({
 describe('navegação móvel', () => {
   it('expõe navegação semântica e menu secundário', () => {
     render(<MemoryRouter><Sidebar /></MemoryRouter>);
-    expect(screen.getByRole('navigation', { name: /navegação financeira móvel/i })).toBeInTheDocument();
-    const more = screen.getByRole('button', { name: 'Mais' });
+    const mobileNavigation = document.querySelector('nav.mobile-nav');
+    expect(mobileNavigation).toHaveAttribute('aria-label', 'Navegação financeira móvel');
+    const more = mobileNavigation.querySelector('.mobile-nav-more');
+    expect(more).toHaveTextContent('Mais');
     expect(more).toHaveAttribute('aria-expanded', 'false');
     fireEvent.click(more);
     expect(more).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('link', { name: /cadastros/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /configurações/i })).toBeInTheDocument();
+    expect(mobileNavigation.querySelector('a[href="/finance/catalogs"]')).toHaveTextContent('Cadastros');
+    expect(mobileNavigation.querySelector('a[href="/settings"]')).toHaveTextContent('Configurações');
   });
 });
 
