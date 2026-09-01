@@ -9,7 +9,7 @@ import { formatCurrency } from '../services/calculations';
 export default function SummaryCards({ summary, loading, insights = {} }) {
   const cards = [
     {
-      label: 'Saldo Atual',
+      label: 'Saldo bancário',
       value: summary.balance,
       icon: Wallet,
       color: summary.balance >= 0 ? 'var(--accent-green)' : 'var(--accent-red)',
@@ -18,7 +18,7 @@ export default function SummaryCards({ summary, loading, insights = {} }) {
       delay: '0ms',
     },
     {
-      label: 'Total de Entradas',
+      label: 'Total de créditos',
       value: summary.totalIncome,
       icon: TrendingUp,
       color: 'var(--accent-green)',
@@ -27,7 +27,7 @@ export default function SummaryCards({ summary, loading, insights = {} }) {
       delay: '60ms',
     },
     {
-      label: 'Total de Gastos',
+      label: 'Total de débitos',
       value: summary.totalExpense,
       icon: TrendingDown,
       color: 'var(--accent-red)',
@@ -51,9 +51,9 @@ export default function SummaryCards({ summary, loading, insights = {} }) {
   };
 
   const insightMap = {
-    'Saldo Atual': insights.balanceInsight,
-    'Total de Entradas': insights.incomeInsight,
-    'Total de Gastos': insights.expenseInsight,
+    'Saldo bancário': insights.balanceInsight,
+    'Total de créditos': insights.incomeInsight,
+    'Total de débitos': insights.expenseInsight,
   };
 
   return (

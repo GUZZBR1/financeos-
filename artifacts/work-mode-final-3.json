@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "version": "1.0.0",
+  "transactionCount": 0,
+  "categoryCount": 6,
+  "databasePath": "C:\\Users\\MM\\Desktop\\Projects\\financeos-\\.omc\\smoke-user-data-work-final-3\\financeos.db",
+  "secretStorageRoundTrip": true,
+  "renderer": {
+    "ready": true,
+    "title": "FinanceOS — Finanças locais",
+    "textLength": 1281,
+    "droppedOfxBridge": true,
+    "workModeVisible": true
+  }
+}

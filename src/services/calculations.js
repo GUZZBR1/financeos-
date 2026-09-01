@@ -4,13 +4,14 @@
  * Todas as funções são puras (sem efeitos colaterais) para facilitar testes.
  */
 
-import { format, subDays, startOfMonth, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
+import { differenceInCalendarDays, format, subDays, startOfMonth, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 /**
  * Filtros de período disponíveis
  */
 export const PERIOD_FILTERS = {
+  ALL: 'all',
   TODAY: 'today',
   LAST_5: 'last5',
   LAST_7: 'last7',
@@ -20,6 +21,7 @@ export const PERIOD_FILTERS = {
 };
 
 export const PERIOD_LABELS = {
+  [PERIOD_FILTERS.ALL]: 'Tudo',
   [PERIOD_FILTERS.TODAY]: 'Hoje',
   [PERIOD_FILTERS.LAST_5]: 'Últimos 5 dias',
   [PERIOD_FILTERS.LAST_7]: 'Últimos 7 dias',
@@ -58,6 +60,7 @@ export const getDateRange = (filter, customStart = null, customEnd = null) => {
  * Filtra transações por período
  */
 export const filterByPeriod = (transactions, filter, customStart = null, customEnd = null) => {
+  if (filter === PERIOD_FILTERS.ALL) return transactions;
   const { start, end } = getDateRange(filter, customStart, customEnd);
   return transactions.filter((t) => {
     const date = parseISO(t.date);
@@ -69,18 +72,61 @@ export const filterByPeriod = (transactions, filter, customStart = null, customE
  * Calcula totais financeiros
  */
 export const calculateSummary = (transactions) => {
-  const totalIncome = transactions
+  const totalIncomeCents = transactions
     .filter((t) => t.type === 'income')
-    .reduce((sum, t) => sum + t.value, 0);
+    .reduce((sum, transaction) => sum + Math.abs(signedTransactionCents(transaction)), 0);
 
-  const totalExpense = transactions
+  const totalExpenseCents = transactions
     .filter((t) => t.type === 'expense')
-    .reduce((sum, t) => sum + t.value, 0);
+    .reduce((sum, transaction) => sum + Math.abs(signedTransactionCents(transaction)), 0);
 
   return {
-    totalIncome,
-    totalExpense,
-    balance: totalIncome - totalExpense,
+    totalIncome: totalIncomeCents / 100,
+    totalExpense: totalExpenseCents / 100,
+    balance: (totalIncomeCents - totalExpenseCents) / 100,
+  };
+};
+
+const signedTransactionCents = (transaction) => {
+  const storedCents = Number(transaction.amountCents);
+  if (Number.isFinite(storedCents)) return storedCents;
+  const absoluteCents = Math.round(Math.abs(Number(transaction.value) || 0) * 100);
+  return transaction.type === 'income' ? absoluteCents : -absoluteCents;
+};
+
+export const calculateCurrentBalance = (transactions, accounts = []) => {
+  const bankAccounts = accounts.filter((account) => account.subtype === 'bank');
+  if (!bankAccounts.length) {
+    return transactions.reduce((sum, transaction) => sum + signedTransactionCents(transaction) / 100, 0);
+  }
+
+  return bankAccounts.reduce((total, account) => {
+    const accountTransactions = transactions.filter((transaction) => transaction.accountId === account.id);
+    const snapshotCents = account.statement_balance_cents;
+    if (snapshotCents != null && account.statement_balance_as_of) {
+      const movementsAfterSnapshot = accountTransactions
+        .filter((transaction) => transaction.date > account.statement_balance_as_of)
+        .reduce((sum, transaction) => sum + signedTransactionCents(transaction), 0);
+      return total + (snapshotCents + movementsAfterSnapshot) / 100;
+    }
+    return total + accountTransactions.reduce((sum, transaction) => sum + signedTransactionCents(transaction), 0) / 100;
+  }, 0);
+};
+
+const getChartDateRange = (transactions, filter, customStart, customEnd) => {
+  if (filter !== PERIOD_FILTERS.ALL) {
+    return getDateRange(filter, customStart, customEnd);
+  }
+
+  const dates = transactions
+    .map((transaction) => parseISO(transaction.date))
+    .filter((date) => !Number.isNaN(date.getTime()))
+    .sort((a, b) => a - b);
+
+  if (!dates.length) return { start: null, end: null };
+  return {
+    start: startOfDay(dates[0]),
+    end: endOfDay(dates[dates.length - 1]),
   };
 };
 
@@ -88,8 +134,9 @@ export const calculateSummary = (transactions) => {
  * Gera dados para o gráfico de barras (Entradas vs Saídas por dia)
  */
 export const getBarChartData = (transactions, filter, customStart, customEnd) => {
-  const { start, end } = getDateRange(filter, customStart, customEnd);
-  const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  const { start, end } = getChartDateRange(transactions, filter, customStart, customEnd);
+  if (!start || !end) return [];
+  const days = differenceInCalendarDays(end, start) + 1;
 
   const map = {};
   for (let i = 0; i < days; i++) {
@@ -112,27 +159,28 @@ export const getBarChartData = (transactions, filter, customStart, customEnd) =>
  * Gera dados para o gráfico de linha (Evolução do saldo)
  */
 export const getLineChartData = (transactions, filter, customStart, customEnd) => {
-  const { start, end } = getDateRange(filter, customStart, customEnd);
-  const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  const { start, end } = getChartDateRange(transactions, filter, customStart, customEnd);
+  if (!start || !end) return [];
+  const days = differenceInCalendarDays(end, start) + 1;
 
   const dailyMap = {};
   for (let i = 0; i < days; i++) {
     const d = subDays(end, days - 1 - i);
     const key = format(d, 'yyyy-MM-dd');
-    dailyMap[key] = { date: format(d, 'dd/MM', { locale: ptBR }), net: 0 };
+    dailyMap[key] = { date: format(d, 'dd/MM', { locale: ptBR }), netCents: 0 };
   }
 
   transactions.forEach((t) => {
     if (dailyMap[t.date]) {
-      dailyMap[t.date].net += t.type === 'income' ? t.value : -t.value;
+      dailyMap[t.date].netCents += signedTransactionCents(t);
     }
   });
 
   // Acumula saldo progressivo
-  let running = 0;
+  let runningCents = 0;
   return Object.values(dailyMap).map((d) => {
-    running += d.net;
-    return { date: d.date, saldo: running };
+    runningCents += d.netCents;
+    return { date: d.date, saldo: runningCents / 100 };
   });
 };
 
@@ -145,9 +193,7 @@ export const getPieChartData = (transactions) => {
   // Agrupa por descrição (primeiras 2 palavras como categoria)
   const grouped = {};
   expenses.forEach((t) => {
-    const category = t.description
-      ? t.description.split(' ').slice(0, 2).join(' ')
-      : 'Outros';
+    const category = t.category || 'Não classificado';
     if (!grouped[category]) grouped[category] = 0;
     grouped[category] += t.value;
   });

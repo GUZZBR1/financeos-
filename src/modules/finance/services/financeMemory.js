@@ -98,7 +98,7 @@ export function generateRecurringInsights(savedViewsList = []) {
       const viewName = savedViewsList.find(v => v.id === mostUsed[0])?.name;
       if (viewName) {
         insights.push({
-          text: `Your most used saved view is "${viewName}" (${mostUsed[1]} times)`,
+          text: `Sua visão salva mais usada é "${viewName}" (${mostUsed[1]} vezes)`,
           type: 'behavior',
         });
       }
@@ -111,7 +111,7 @@ export function generateRecurringInsights(savedViewsList = []) {
     const mostViewed = Object.entries(catViews).sort((a, b) => b[1] - a[1])[0];
     if (mostViewed[1] >= 5) {
       insights.push({
-        text: `You frequently review ${mostViewed[0]} expenses (${mostViewed[1]} times)`,
+        text: `Você revisa despesas de ${mostViewed[0]} com frequência (${mostViewed[1]} vezes)`,
         type: 'behavior',
       });
     }
@@ -123,7 +123,7 @@ export function generateRecurringInsights(savedViewsList = []) {
     const topSpike = Object.entries(spikes).sort((a, b) => b[1] - a[1])[0];
     if (topSpike[1] >= 2) {
       insights.push({
-        text: `${topSpike[0]} has triggered cost spikes ${topSpike[1]} times recently`,
+        text: `${topSpike[0]} apresentou picos de custo ${topSpike[1]} vezes recentemente`,
         type: 'pattern',
       });
     }
@@ -133,7 +133,7 @@ export function generateRecurringInsights(savedViewsList = []) {
   const negCount = mem.patterns.negativeBalanceCount || 0;
   if (negCount >= 3) {
     insights.push({
-      text: `Balance has been negative ${negCount} times this period — consider reviewing expenses`,
+      text: `O saldo ficou negativo ${negCount} vezes neste período — considere revisar as despesas`,
       type: 'warning',
     });
   }

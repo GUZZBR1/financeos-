@@ -40,44 +40,46 @@ export const generateInsights = (transactions, currentPeriod, customStart, custo
   // Balance insight
   let balanceInsight;
   if (balance > 10000) {
-    balanceInsight = { text: 'Balance is healthy', status: 'positive', trend: null };
+    balanceInsight = { text: 'Saldo saudável', status: 'positive', trend: null };
   } else if (balance > 0) {
-    balanceInsight = { text: 'Balance is positive', status: 'neutral', trend: null };
+    balanceInsight = { text: 'Saldo positivo', status: 'neutral', trend: null };
+  } else if (balance < 0) {
+    balanceInsight = { text: 'Saldo negativo', status: 'warning', trend: null };
   } else {
-    balanceInsight = { text: 'Balance is negative', status: 'warning', trend: null };
+    balanceInsight = { text: 'Saldo zerado', status: 'neutral', trend: null };
   }
 
   // Income insight
   let incomeInsight;
   if (prevIncome === 0 && currIncome > 0) {
-    incomeInsight = { text: 'Revenue is up significantly', status: 'positive', trend: null };
+    incomeInsight = { text: 'Receitas aumentaram', status: 'positive', trend: null };
   } else if (prevIncome === 0) {
-    incomeInsight = { text: 'Revenue is stable', status: 'neutral', trend: null };
+    incomeInsight = { text: 'Receitas estáveis', status: 'neutral', trend: null };
   } else {
     const pct = ((currIncome - prevIncome) / prevIncome) * 100;
     if (Math.abs(pct) < 5) {
-      incomeInsight = { text: 'Revenue is stable', status: 'neutral', trend: null };
+      incomeInsight = { text: 'Receitas estáveis', status: 'neutral', trend: null };
     } else if (pct > 0) {
-      incomeInsight = { text: `Revenue is up ${Math.round(pct)}%`, status: 'positive', trend: pct };
+      incomeInsight = { text: `Receitas subiram ${Math.round(pct)}%`, status: 'positive', trend: pct };
     } else {
-      incomeInsight = { text: `Revenue is down ${Math.round(Math.abs(pct))}%`, status: 'warning', trend: -pct };
+      incomeInsight = { text: `Receitas caíram ${Math.round(Math.abs(pct))}%`, status: 'warning', trend: -pct };
     }
   }
 
   // Expense insight
   let expenseInsight;
   if (prevExpense === 0 && currExpense > 0) {
-    expenseInsight = { text: 'Expenses are present', status: 'neutral', trend: null };
+    expenseInsight = { text: 'Há despesas no período', status: 'neutral', trend: null };
   } else if (prevExpense === 0) {
-    expenseInsight = { text: 'Expenses are stable', status: 'neutral', trend: null };
+    expenseInsight = { text: 'Despesas estáveis', status: 'neutral', trend: null };
   } else {
     const pct = ((currExpense - prevExpense) / prevExpense) * 100;
     if (Math.abs(pct) < 5) {
-      expenseInsight = { text: 'Expenses are stable', status: 'neutral', trend: null };
+      expenseInsight = { text: 'Despesas estáveis', status: 'neutral', trend: null };
     } else if (pct > 0) {
-      expenseInsight = { text: `Expenses rose ${Math.round(pct)}%`, status: 'warning', trend: pct };
+      expenseInsight = { text: `Despesas subiram ${Math.round(pct)}%`, status: 'warning', trend: pct };
     } else {
-      expenseInsight = { text: `Expenses down ${Math.round(Math.abs(pct))}%`, status: 'positive', trend: -pct };
+      expenseInsight = { text: `Despesas caíram ${Math.round(Math.abs(pct))}%`, status: 'positive', trend: -pct };
     }
   }
 

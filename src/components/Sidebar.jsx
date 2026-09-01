@@ -4,17 +4,24 @@
  */
 
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, History, Plus, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, History, Plus, TrendingUp, FileUp, ListChecks, Settings, Library, MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import TransactionModal from './TransactionModal';
 
 const navItems = [
-  { to: '/finance', icon: LayoutDashboard, label: 'Finance' },
-  { to: '/finance/history', icon: History, label: 'Financial History' },
+  { to: '/finance', icon: LayoutDashboard, label: 'Painel' },
+  { to: '/finance/history', icon: History, label: 'Histórico' },
+  { to: '/finance/imports', icon: FileUp, label: 'Importações' },
+  { to: '/finance/rules', icon: ListChecks, label: 'Regras' },
+  { to: '/finance/catalogs', icon: Library, label: 'Cadastros' },
+  { to: '/settings', icon: Settings, label: 'Configurações' },
 ];
 
 export default function Sidebar() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const mobilePrimary = navItems.slice(0, 4);
+  const mobileSecondary = navItems.slice(4);
 
   return (
     <>
@@ -68,7 +75,7 @@ export default function Sidebar() {
         </button>
 
         {/* Nav links */}
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <nav aria-label="Navegação financeira" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <p style={{
             fontSize: 10,
             fontWeight: 600,
@@ -115,7 +122,7 @@ export default function Sidebar() {
       </aside>
 
       {/* Mobile bottom bar */}
-      <div style={{
+      <nav aria-label="Navegação financeira móvel" style={{
         display: 'none',
         position: 'fixed',
         bottom: 0, left: 0, right: 0,
@@ -126,7 +133,7 @@ export default function Sidebar() {
         justifyContent: 'space-around',
         alignItems: 'center',
       }} className="mobile-nav">
-        {navItems.map(({ to, icon: Icon, label }) => (
+        {mobilePrimary.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
@@ -168,12 +175,19 @@ export default function Sidebar() {
           <Plus size={20} />
           Novo
         </button>
-      </div>
+        <button className="mobile-nav-more" type="button" aria-expanded={moreOpen} aria-controls="mobile-more-menu" onClick={() => setMoreOpen((current) => !current)}><MoreHorizontal size={20} />Mais</button>
+        {moreOpen && <div id="mobile-more-menu" className="mobile-more-menu">{mobileSecondary.map(({ to, icon: Icon, label }) => <NavLink key={to} to={to} onClick={() => setMoreOpen(false)}><Icon size={18} />{label}</NavLink>)}</div>}
+      </nav>
 
       <style>{`
         @media (max-width: 900px) {
           .sidebar-desktop { display: none !important; }
           .mobile-nav { display: flex !important; }
+          .mobile-nav { padding: 6px max(4px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(4px, env(safe-area-inset-left)) !important; justify-content: space-between !important; }
+          .mobile-nav > a, .mobile-nav > button { min-width: 0; flex: 1 1 0; padding: 7px 2px !important; justify-content: center; }
+          .mobile-nav-more { display:flex; flex-direction:column; align-items:center; gap:4px; border:0; border-radius:var(--radius-sm); background:transparent; color:var(--text-muted); font-size:10px; }
+          .mobile-more-menu { position:absolute; right:8px; bottom:calc(100% + 8px); min-width:180px; padding:6px; background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); }
+          .mobile-more-menu a { display:flex; align-items:center; gap:10px; padding:11px; color:var(--text-secondary); text-decoration:none; border-radius:var(--radius-sm); }
         }
       `}</style>
 

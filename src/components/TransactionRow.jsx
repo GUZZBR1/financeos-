@@ -3,22 +3,82 @@
  * Linha individual de transação para uso no histórico e dashboard.
  */
 
-import { Trash2, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { Trash2, ArrowDownLeft, ArrowUpRight, CheckCircle2 } from 'lucide-react';
 import { formatCurrency, formatDisplayDate } from '../services/calculations';
 import { useTransactions } from '../context/TransactionContext';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function TransactionRow({ transaction, compact = false }) {
-  const { removeTransaction } = useTransactions();
+  const { removeTransaction, categorizeTransaction, reconcileTransaction, categories } = useTransactions();
   const [confirming, setConfirming] = useState(false);
+  const [categorizing, setCategorizing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [reconciling, setReconciling] = useState(false);
+  const [operationError, setOperationError] = useState('');
+  const confirmationTimer = useRef(null);
+  const deleteButtonRef = useRef(null);
   const isIncome = transaction.type === 'income';
 
-  const handleDelete = () => {
+  useEffect(() => () => clearTimeout(confirmationTimer.current), []);
+  useEffect(() => {
+    if (!confirming) return undefined;
+    const cancelConfirmation = (event) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      clearTimeout(confirmationTimer.current);
+      setConfirming(false);
+      deleteButtonRef.current?.focus();
+    };
+    document.addEventListener('keydown', cancelConfirmation);
+    return () => document.removeEventListener('keydown', cancelConfirmation);
+  }, [confirming]);
+
+  const handleDelete = async () => {
+    if (deleting) return;
     if (!confirming) {
       setConfirming(true);
-      setTimeout(() => setConfirming(false), 3000);
-    } else {
-      removeTransaction(transaction.id);
+      clearTimeout(confirmationTimer.current);
+      confirmationTimer.current = setTimeout(() => setConfirming(false), 3000);
+      return;
+    }
+    clearTimeout(confirmationTimer.current);
+    setDeleting(true);
+    setOperationError('');
+    try {
+      await removeTransaction(transaction.id);
+    } catch (error) {
+      setConfirming(false);
+      setOperationError(error.message || 'Não foi possível excluir esta transação.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleCategory = async (event) => {
+    const categoryId = event.target.value;
+    if (!categoryId) return;
+    if (categorizing) return;
+    setCategorizing(true);
+    setOperationError('');
+    try {
+      await categorizeTransaction(transaction.id, categoryId, true);
+    } catch (error) {
+      setOperationError(error.message || 'Não foi possível classificar esta transação.');
+    } finally {
+      setCategorizing(false);
+    }
+  };
+
+  const handleReconcile = async () => {
+    if (reconciling) return;
+    setReconciling(true);
+    setOperationError('');
+    try {
+      await reconcileTransaction(transaction.id);
+    } catch (error) {
+      setOperationError(error.message || 'Não foi possível conciliar esta transação.');
+    } finally {
+      setReconciling(false);
     }
   };
 
@@ -61,8 +121,17 @@ export default function TransactionRow({ transaction, compact = false }) {
           {transaction.description || (isIncome ? 'Recebimento' : 'Gasto')}
         </p>
         <p style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>
-          {formatDisplayDate(transaction.date)} · {isIncome ? 'Entrada' : 'Saída'}
+          {formatDisplayDate(transaction.date)} · {isIncome ? 'Crédito' : 'Débito'} · {transaction.category || 'Categoria pendente'}
         </p>
+        {!compact && transaction.status === 'review' && (
+          <select className="inline-category" aria-label={`Classificar ${transaction.description}`} defaultValue="" onChange={handleCategory} disabled={categorizing}>
+            <option value="">{categorizing ? 'Classificando...' : 'Escolher categoria e aprender regra'}</option>
+            {categories.filter((category) => category.type === transaction.type || category.type === 'both').map((category) => (
+              <option key={category.id} value={category.id}>{category.name}</option>
+            ))}
+          </select>
+        )}
+        {operationError && <p className="form-error" role="alert">{operationError}</p>}
       </div>
 
       {/* Value */}
@@ -77,8 +146,18 @@ export default function TransactionRow({ transaction, compact = false }) {
       </div>
 
       {/* Delete button */}
+      {!compact && transaction.status === 'categorized' && (
+        <button className="icon-button" onClick={handleReconcile} disabled={reconciling || deleting} aria-label={reconciling ? `Conciliando ${transaction.description}` : `Conciliar ${transaction.description}`} title="Marcar como conciliada">
+          <CheckCircle2 size={14} />
+        </button>
+      )}
       <button
+        ref={deleteButtonRef}
         onClick={handleDelete}
+        disabled={deleting || reconciling}
+        aria-pressed={confirming}
+        aria-describedby={confirming ? `delete-confirmation-${transaction.id}` : undefined}
+        aria-label={confirming ? `Confirmar exclusão de ${transaction.description}` : `Excluir ${transaction.description}`}
         title={confirming ? 'Clique novamente para confirmar' : 'Excluir'}
         style={{
           background: confirming ? 'var(--accent-red-dim)' : 'transparent',
@@ -95,6 +174,7 @@ export default function TransactionRow({ transaction, compact = false }) {
       >
         <Trash2 size={14} />
       </button>
+      {confirming && <span id={`delete-confirmation-${transaction.id}`} role="status" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>Clique novamente para confirmar a exclusão ou pressione Escape para cancelar.</span>}
     </div>
   );
 }

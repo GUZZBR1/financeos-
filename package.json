@@ -1,14 +1,22 @@
 {
   "name": "financeos",
+  "productName": "FinanceOS",
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "main": "electron/main.mjs",
   "scripts": {
     "dev": "vite",
+    "dev:web": "vite",
+    "dev:desktop": "node scripts/dev-desktop.mjs",
     "build": "vite build",
+    "setup:desktop-runtime": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-electron-runtime.ps1",
+    "setup:node-runtime": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-node-runtime.ps1",
+    "build:desktop": "vite build && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-desktop.ps1",
     "preview": "vite preview",
-    "lint": "eslint src --ext js,jsx",
+    "lint": "eslint src electron scripts --ext js,jsx,mjs,cjs",
     "test": "vitest",
+    "test:core": "node --test config/content-security-policy.test.mjs electron/ai/classification-provider.test.mjs electron/domain/classification.test.mjs electron/domain/financial-values.test.mjs electron/domain/ofx-parser.test.mjs electron/ipc/trusted-ipc.test.mjs electron/ipc/validation.test.mjs electron/security/navigation-policy.test.mjs electron/security/outbound-url.test.mjs electron/connectors/questor-syn.test.mjs electron/database/finance-database.test.mjs electron/services/import-service.test.mjs electron/services/local-api-server.test.mjs electron/services/backup-service.test.mjs electron/services/secret-store.test.mjs src/modules/finance/services/financeHistoryUrlState.test.mjs src/services/calculations.test.mjs",
     "test:run": "vitest run",
     "test:ui": "vitest --ui"
   },

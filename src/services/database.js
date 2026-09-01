@@ -38,12 +38,27 @@ export const saveTransaction = (transaction) => {
     type: transaction.type, // 'income' | 'expense'
     description: transaction.description || '',
     date: transaction.date,
+    categoryId: transaction.categoryId || null,
+    category: transaction.category || null,
+    accountId: transaction.accountId || 'account_checking_default',
+    account: transaction.account || 'Conta bancária principal',
+    status: transaction.categoryId ? 'categorized' : 'review',
+    sourceType: 'web-preview',
     createdAt: new Date().toISOString(),
   };
 
   transactions.push(newTransaction);
   localStorage.setItem(DB_KEY, JSON.stringify(transactions));
   return newTransaction;
+};
+
+export const updateTransaction = (id, changes) => {
+  const transactions = getAllTransactions();
+  const index = transactions.findIndex((transaction) => transaction.id === id);
+  if (index < 0) return null;
+  transactions[index] = { ...transactions[index], ...changes, updatedAt: new Date().toISOString() };
+  localStorage.setItem(DB_KEY, JSON.stringify(transactions));
+  return transactions[index];
 };
 
 /**

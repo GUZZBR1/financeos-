@@ -19,10 +19,10 @@ export function generateAlertsAndSuggestions(transactions, period, customStart, 
     alerts.push({
       id: 'negative-balance',
       type: 'warning',
-      title: 'Negative balance detected',
-      message: 'Your balance is negative in the current period.',
+      title: 'Saldo negativo detectado',
+      message: 'O saldo está negativo no período atual.',
       action: {
-        label: 'Review expenses',
+        label: 'Revisar despesas',
         type: 'review_negative'
       }
     });
@@ -35,10 +35,10 @@ export function generateAlertsAndSuggestions(transactions, period, customStart, 
       alerts.push({
         id: 'expenses-spike',
         type: 'warning',
-        title: 'Expenses are up significantly',
-        message: `Expenses rose ${Math.round(expenseChange)}% compared to the previous period.`,
+        title: 'Despesas aumentaram significativamente',
+        message: `As despesas subiram ${Math.round(expenseChange)}% em relação ao período anterior.`,
         action: {
-          label: 'See top expenses',
+          label: 'Ver maiores despesas',
           type: 'see_top_expenses'
         }
       });
@@ -52,10 +52,10 @@ export function generateAlertsAndSuggestions(transactions, period, customStart, 
       alerts.push({
         id: 'revenue-decline',
         type: 'warning',
-        title: 'Revenue is declining',
-        message: `Revenue is down ${Math.round(Math.abs(incomeChange))}% compared to the previous period.`,
+        title: 'Receitas em queda',
+        message: `As receitas caíram ${Math.round(Math.abs(incomeChange))}% em relação ao período anterior.`,
         action: {
-          label: 'Open history',
+          label: 'Abrir histórico',
           type: 'open_history'
         }
       });
@@ -67,7 +67,7 @@ export function generateAlertsAndSuggestions(transactions, period, customStart, 
   currentFiltered
     .filter(t => t.type === 'expense')
     .forEach(t => {
-      const cat = t.description.split(' ').slice(0, 2).join(' ');
+      const cat = t.category || 'Não classificado';
       categoryTotals[cat] = (categoryTotals[cat] || 0) + t.value;
     });
 
@@ -80,8 +80,8 @@ export function generateAlertsAndSuggestions(transactions, period, customStart, 
       alerts.push({
         id: 'dominant-category',
         type: dominance > 70 ? 'warning' : 'neutral',
-        title: 'Concentrated expense category',
-        message: `${topCategory[0]} accounts for ${Math.round(dominance)}% of total expenses.`
+        title: 'Despesas concentradas em uma categoria',
+        message: `${topCategory[0]} representa ${Math.round(dominance)}% das despesas.`
       });
     }
   }
@@ -93,10 +93,10 @@ export function generateAlertsAndSuggestions(transactions, period, customStart, 
     suggestions.push({
       id: 'review-top-category',
       type: 'neutral',
-      title: 'Review top expense category',
-      message: `${topCategory[0]} is your highest expense this period.`,
+      title: 'Revisar principal categoria de despesa',
+      message: `${topCategory[0]} é a maior despesa deste período.`,
       action: {
-        label: 'Filter category',
+        label: 'Filtrar categoria',
         type: 'filter_category'
       }
     });
@@ -107,10 +107,10 @@ export function generateAlertsAndSuggestions(transactions, period, customStart, 
       suggestions.push({
         id: 'savings-opportunity',
         type: 'positive',
-        title: 'Potential savings opportunity',
-        message: `Consider reducing ${topCategory[0]} by 10% to save ~R$ ${estimatedSavings.toLocaleString('BRL')} this period.`,
+        title: 'Oportunidade de economia',
+        message: `Reduzir ${topCategory[0]} em 10% economizaria aproximadamente ${estimatedSavings.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} neste período.`,
         action: {
-          label: 'Simulate savings',
+          label: 'Simular economia',
           type: 'simulate_savings'
         }
       });
@@ -120,16 +120,18 @@ export function generateAlertsAndSuggestions(transactions, period, customStart, 
   // 3. Stable period signal (healthy finances)
   if (currentSummary.balance > 0 &&
       prevSummary.balance > 0 &&
+      prevSummary.totalIncome > 0 &&
+      prevSummary.totalExpense > 0 &&
       Math.abs(((currentSummary.totalIncome - prevSummary.totalIncome) / prevSummary.totalIncome) * 100) <= 10 &&
       Math.abs(((currentSummary.totalExpense - prevSummary.totalExpense) / prevSummary.totalExpense) * 100) <= 10 &&
       !alerts.some(a => a.type === 'warning')) {
     suggestions.push({
       id: 'stable-period',
       type: 'positive',
-      title: 'Finances are stable',
-      message: 'Your income and expenses are consistent this period.',
+      title: 'Finanças estáveis',
+      message: 'Receitas e despesas estão consistentes neste período.',
       action: {
-        label: 'See overview',
+        label: 'Ver resumo',
         type: 'see_overview'
       }
     });

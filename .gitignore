@@ -1,5 +1,10 @@
 # Dependencies
 node_modules/
+.runtime/
+release/
+*.db
+*.db-wal
+*.db-shm
 
 # Build output
 dist/
@@ -31,6 +36,7 @@ npm-debug.log*
 
 # Claude Code (local config — not project files)
 .claude/
+.codex
 
 # Temporary files
 *.tmp

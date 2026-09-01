@@ -1,200 +1,94 @@
-# FinanceOS — Your AI-Powered Finance Department
+# FinanceOS
 
-A complete financial operations system that acts like an in-house finance department — analyzing your data, surfacing critical insights, and guiding users to take immediate action.
+Aplicativo financeiro desktop, local-first e preparado para integrações. Os dados operacionais ficam em um banco SQLite no computador; nenhuma conta em nuvem é necessária.
 
----
+## O que está implementado
 
-## Why FinanceOS?
+- Aplicativo Windows em Electron com interface React.
+- SQLite local, migrações e trilha de auditoria.
+- Contas bancárias, categorias e partidas dobradas balanceadas.
+- Importação OFX/QFX com prévia, limite de 25 MB e deduplicação.
+- Classificação determinística por regras, inclusive aprendizado a partir de correções manuais.
+- Revisão, categorização e conciliação de transações.
+- API HTTP local autenticada para receber transações de outros programas.
+- Conector configurável para envio contábil ao Questor SYN, com De/Para de contas e idempotência.
+- Backup e restauração do banco.
+- Interface de provedor preparada para IA opcional. O fluxo principal não usa nem exige IA.
 
-Most financial tools show you what happened. FinanceOS tells you what matters and what to do next.
+## Executar a versão pronta
 
-It combines smart analysis, proactive alerts, and actionable recommendations into a single, coherent system — so you spend less time digging through spreadsheets and more time making decisions.
+Abra:
 
----
-
-## Core Features
-
-### 📊 Smart Financial Dashboard
-A real-time overview that goes beyond raw numbers. The dashboard synthesizes income, expenses, balance trends, and category breakdowns — then pairs them with AI-generated insights that put context behind the figures.
-
-### 🚨 Finance Signals (Alerts & Suggestions)
-Automatic detection of important financial events:
-- **Negative balance warnings**
-- **Expense spikes** vs previous periods
-- **Revenue decline** signals
-- **Dominant expense categories** (concentration risk)
-- **Savings opportunities** based on spending patterns
-- **Stability indicators** for healthy periods
-
-Each signal carries an action button — so detection immediately leads to resolution.
-
-### ⚡ Actionable Interface
-FinanceOS doesn't just inform — it enables action directly from the dashboard:
-
-- **Simulate savings** — see the impact of a 10% category cut, monthly and yearly
-- **Review top expenses** — jump directly to filtered history
-- **Filter by category** — contextually navigate to the relevant transactions
-- **Open history** — pre-filtered to the right type and period
-
-Results appear in a lightweight inline panel — no modals, no interruptions.
-
-### 📁 Contextual Financial History
-The history page adapts to how you arrived there. Actions from the dashboard pass filter context via URL — so `/finance/history?type=expense&category=Marketing` is a shared, bookmarkable view.
-
-**Quick Views** provide one-click access to common contexts:
-- All transactions
-- Income only
-- Expenses only
-- Top expense category
-
-URL-based state means every view is shareable and persists across sessions.
-
-### 🔗 URL-Based State & Quick Views
-Filter state lives in the URL query string — not in memory, not in localStorage. This means:
-- Share a link directly to "Marketing expenses this month"
-- Bookmark any filtered view
-- Browser back/forward navigation works correctly
-- No lost state on page reload
-
----
-
-## Product Flow
-
-```
-Dashboard → Finance Signals → Action Buttons → Contextual History
-                ↓
-         ActionResultPanel
-         (simulation / recommendation / filter result)
+```text
+release\FinanceOS-win-x64\FinanceOS.exe
 ```
 
-The core loop: **detect → act → investigate → repeat**.
+A pasta inteira `FinanceOS-win-x64` compõe a versão portátil; não mova somente o arquivo `.exe`.
 
-Finance Signals surface what needs attention. Action buttons provide one-click paths to resolution. The history page receives context and renders the relevant data. The cycle repeats.
+O banco e as credenciais não ficam dentro da pasta do programa. No Windows, a tela **Configurações** mostra o caminho exato usado pelo Electron. Tokens são protegidos pelo mecanismo de credenciais do sistema operacional.
 
----
+## Desenvolvimento
 
-## Screens
+Requisitos: Node.js 22 ou superior e PowerShell no Windows.
 
-> **Dashboard View** — Smart summary cards with insights, charts, and Finance Signals with action buttons.
-
-> **Finance Signals** — Alerts and suggestions rendered as actionable cards, each with a direct action.
-
-> **ActionResultPanel** — Inline panel showing savings simulation results or contextual recommendations.
-
-> **History with Filters** — Full transaction history with Quick Views chips, URL-synced type/category filters, search, and sort.
-
-> **Quick Views** — One-click filter chips that navigate to All / Income / Expenses / Top Category views.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Framework | React 18 + Vite |
-| Routing | React Router DOM v6 |
-| State | Context API |
-| Charts | Recharts |
-| Icons | Lucide React |
-| Persistence | localStorage |
-| Fonts | Syne + DM Mono (Google Fonts) |
-
-No external databases. No credentials to manage. Data lives in the browser and survives reloads.
-
----
-
-## Project Structure
-
-```
-src/
-├── modules/finance/
-│   ├── components/
-│   │   ├── FinanceSignals.jsx        # Alert/suggestion cards with actions
-│   │   └── ActionResultPanel.jsx     # Inline action result display
-│   └── services/
-│       ├── financeActions.js          # Action type → result mapping
-│       ├── financeAlerts.js          # Alert/suggestion generation
-│       ├── financeInsights.js        # AI-style insight generation
-│       ├── financeHistoryUrlState.js # URL query string helpers
-│       └── financeEvents.js
-├── pages/Finance/
-│   ├── FinanceDashboard.jsx          # Main finance department page
-│   └── FinanceHistory.jsx            # History with URL-based filters
-├── components/
-│   ├── Sidebar.jsx, SummaryCards.jsx, Charts.jsx
-│   ├── PeriodFilter.jsx, TransactionModal.jsx
-│   └── TransactionRow.jsx
-├── services/
-│   ├── database.js                   # localStorage CRUD
-│   └── calculations.js               # Pure financial calculations
-├── context/
-│   └── TransactionContext.jsx       # Global transaction state
-└── App.jsx                           # Routing and providers
-```
-
----
-
-## Getting Started
-
-```bash
-# Install dependencies
+```powershell
 npm install
-
-# Run in development
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
+npm run setup:desktop-runtime
+npm run dev:desktop
 ```
 
----
+Outros comandos:
 
-## Roadmap
-
-- [ ] **Backend integration** — REST API replacing localStorage
-- [x] **AI-powered recommendations** — smarter savings and expense insights
-- [x] **Saved Views** — persistent user-defined filter presets
-- [x] **Advanced automation** — recurring transaction rules and scheduled alerts
-- [ ] **Export & reports** — PDF/CSV generation for stakeholders
-
----
-
-## Deploy
-
-The app is deployed via GitHub Actions CI/CD on every push to `main`.
-
-**Live URL:** https://GUZZBR1.github.io/financeos-/
-
-To deploy manually:
-
-```bash
-npm run build
-# dist/ folder is ready to serve on GitHub Pages, Vercel, Netlify, etc.
+```powershell
+npm run build          # compila a interface
+npm run test:core      # testa SQLite, OFX, regras, API, backup e conectores
+npm run test:run       # testa componentes React
+npm run lint           # análise estática
+npm run build:desktop  # compila e gera release\FinanceOS-win-x64
 ```
 
----
+O script de runtime baixa o ZIP oficial do Electron e confere seu SHA-256 antes da extração. O empacotamento anterior é movido para `.omc\package-backups` em vez de ser apagado.
 
-## Try it here
+## Fluxo OFX
 
-**App:** https://GUZZBR1.github.io/financeos-/
+1. Abra **Importações** e arraste um `.ofx` ou `.qfx` para a área indicada, ou use **Selecionar OFX**.
+2. Confira a conta, a quantidade e a amostra exibida.
+3. Confirme a importação.
+4. Transações reconhecidas por regras recebem categoria automaticamente; as demais ficam em revisão.
+5. Ao corrigir uma categoria, marque a opção de aprendizado para criar uma regra exata reutilizável.
 
-**Quick start:**
+A deduplicação usa `FITID` quando fornecido pelo banco e uma impressão digital determinística como alternativa. Reimportar o mesmo arquivo não duplica movimentos.
 
-```bash
-npm install
-npm run dev
-# Open http://localhost:5173
+Créditos e débitos entram no saldo bancário imediatamente, mesmo quando a categoria ainda está pendente. Quando o OFX informa `LEDGERBAL/BALAMT`, esse saldo do banco é usado como referência; movimentos posteriores são acrescentados normalmente.
+
+## Integrações
+
+- [API HTTP local](docs/integrations/local-api.md)
+- [Questor SYN](docs/integrations/questor-syn.md)
+- [Extensão opcional para IA](docs/integrations/ai-provider.md)
+
+Integrações ficam desativadas até serem configuradas pelo usuário. A API local aceita apenas endereços de loopback (`127.0.0.1`, `localhost` ou `::1`).
+
+## Estrutura
+
+```text
+electron/
+  ai/             interfaces opcionais de IA
+  connectors/     conectores externos e Questor
+  database/       SQLite, migrações e repositório financeiro
+  domain/         parser OFX e classificação determinística
+  services/       importação, backup, API e credenciais
+src/              interface React
+scripts/          execução e empacotamento desktop
+docs/architecture decisões arquiteturais
 ```
 
-The app ships with 18 demo transactions so you can explore all features immediately after install.
+## Decisões importantes
 
----
+- O renderer não acessa Node.js, arquivos ou SQLite diretamente.
+- `contextIsolation`, sandbox e uma lista explícita de operações IPC reduzem a superfície de ataque.
+- Valores monetários são persistidos em centavos inteiros.
+- Uma transação categorizada gera duas partidas cuja soma deve ser zero.
+- IA somente pode sugerir; regras e revisão humana permanecem o caminho confiável.
 
-## Philosophy
-
-FinanceOS is built on the principle that financial tools should reduce cognitive load — not increase it. Every feature either surfaces something important or removes friction from acting on it.
-
-If you find yourself opening the history page to manually look for something — that's a Finance Signal that should have found you first.
+Veja os registros completos em `docs/architecture/`.

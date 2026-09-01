@@ -30,10 +30,10 @@ export function generateRecommendations({ topCategory, alerts = [] } = {}) {
       recommendations.push({
         id: `spike-reduce-${topCategory[0]}`,
         type: 'action',
-        title: `Reduce ${topCategory[0]} costs`,
-        message: `${topCategory[0]} has triggered cost spikes ${spikeCount} times recently. Simulate a 10% reduction?`,
+        title: `Reduzir custos de ${topCategory[0]}`,
+        message: `${topCategory[0]} apresentou picos de custo ${spikeCount} vezes. Simular uma redução de 10%?`,
         action: {
-          label: 'Simulate savings',
+          label: 'Simular economia',
           type: 'simulate_savings',
         },
       });
@@ -48,12 +48,12 @@ export function generateRecommendations({ topCategory, alerts = [] } = {}) {
       recommendations.push({
         id: `create-view-${topCategory[0]}`,
         type: 'action',
-        title: `Save ${topCategory[0]} view`,
-        message: `You often review ${topCategory[0]} expenses but haven't saved this filter yet.`,
+        title: `Salvar visão de ${topCategory[0]}`,
+        message: `Você revisa despesas de ${topCategory[0]} com frequência, mas ainda não salvou esse filtro.`,
         action: {
-          label: 'Save view',
+          label: 'Salvar visão',
           type: 'save_view',
-          payload: { category: topCategory[0], suggestedName: `${topCategory[0]} Expenses` },
+          payload: { category: topCategory[0], suggestedName: `Despesas de ${topCategory[0]}` },
         },
       });
     }
@@ -69,10 +69,10 @@ export function generateRecommendations({ topCategory, alerts = [] } = {}) {
         recommendations.push({
           id: `revisit-${mostUsedView.id}`,
           type: 'action',
-          title: `Revisit "${mostUsedView.name}"`,
-          message: `Your most used view is "${mostUsedView.name}" (${mostUsedEntry[1]} times). Open it?`,
+          title: `Reabrir "${mostUsedView.name}"`,
+          message: `Sua visão mais usada é "${mostUsedView.name}" (${mostUsedEntry[1]} vezes). Deseja abri-la?`,
           action: {
-            label: 'Open saved view',
+            label: 'Abrir visão salva',
             type: 'open_saved_view',
             payload: { viewId: mostUsedView.id, filters: mostUsedView.filters, viewName: mostUsedView.name },
           },
@@ -86,10 +86,10 @@ export function generateRecommendations({ topCategory, alerts = [] } = {}) {
     recommendations.push({
       id: 'review-expenses-negative',
       type: 'action',
-      title: 'Review your expenses',
-      message: `Balance has been negative ${mem.patterns.negativeBalanceCount} times recently. Time for a thorough review?`,
+      title: 'Revisar suas despesas',
+      message: `O saldo ficou negativo ${mem.patterns.negativeBalanceCount} vezes recentemente. Que tal fazer uma revisão detalhada?`,
       action: {
-        label: 'Review expenses',
+        label: 'Revisar despesas',
         type: 'review_expenses',
       },
     });
@@ -104,12 +104,12 @@ export function generateRecommendations({ topCategory, alerts = [] } = {}) {
         recommendations.push({
           id: `save-${mostViewedCat[0]}`,
           type: 'action',
-          title: `Save your ${mostViewedCat[0]} filter`,
-          message: `You've viewed ${mostViewedCat[0]} ${mostViewedCat[1]} times. Save this filter for quick access?`,
+          title: `Salvar filtro de ${mostViewedCat[0]}`,
+          message: `Você consultou ${mostViewedCat[0]} ${mostViewedCat[1]} vezes. Salvar esse filtro para acesso rápido?`,
           action: {
-            label: 'Save view',
+            label: 'Salvar visão',
             type: 'save_view',
-            payload: { category: mostViewedCat[0], suggestedName: `${mostViewedCat[0]} Expenses` },
+            payload: { category: mostViewedCat[0], suggestedName: `Despesas de ${mostViewedCat[0]}` },
           },
         });
       }

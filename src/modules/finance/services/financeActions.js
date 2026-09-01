@@ -19,8 +19,8 @@
 export function handleNegativeBalance() {
   return {
     type: 'recommendation',
-    title: 'Negative Balance',
-    message: 'Review your recent expenses to identify areas where spending can be reduced.',
+    title: 'Saldo negativo',
+    message: 'Revise as despesas recentes para identificar onde os gastos podem ser reduzidos.',
   };
 }
 
@@ -33,10 +33,10 @@ export function handleNegativeBalance() {
 export function handleExpensesSpike({ topCategory }) {
   return {
     type: 'navigation',
-    title: 'Top Expense Category',
+    title: 'Principal categoria de despesa',
     message: topCategory
-      ? `Navigating to show ${topCategory[0]} expenses.`
-      : 'Navigating to show expense transactions.',
+      ? `Abrindo as despesas de ${topCategory[0]}.`
+      : 'Abrindo as transações de despesa.',
     navigateTo: '/finance/history?type=expense',
   };
 }
@@ -48,8 +48,8 @@ export function handleExpensesSpike({ topCategory }) {
 export function handleRevenueDecline() {
   return {
     type: 'navigation',
-    title: 'Revenue Analysis',
-    message: 'View your transaction history to identify revenue trends and patterns.',
+    title: 'Análise de receitas',
+    message: 'Consulte o histórico para identificar tendências e padrões nas receitas.',
     navigateTo: '/finance/history',
   };
 }
@@ -65,10 +65,10 @@ export function handleReviewTopCategory({ topCategory, categoryName }) {
   const category = categoryName || topCategory?.[0];
   return {
     type: 'navigation',
-    title: `Filter: ${category || 'Top Category'}`,
+    title: `Filtro: ${category || 'Principal categoria'}`,
     message: topCategory
-      ? `Navigating to show ${topCategory[0]} transactions. Total: R$ ${topCategory[1].toLocaleString('BRL')}`
-      : 'Navigating to show category transactions.',
+      ? `Abrindo as transações de ${topCategory[0]}. Total: ${topCategory[1].toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
+      : 'Abrindo as transações da categoria.',
     navigateTo: `/finance/history?type=expense&category=${encodeURIComponent(category || '')}`,
   };
 }
@@ -84,8 +84,8 @@ export function handleSavingsOpportunity({ topCategory, percentage = 10 }) {
   if (!topCategory) {
     return {
       type: 'simulation',
-      title: 'Savings Simulation',
-      message: 'No expense data available for simulation.',
+      title: 'Simulação de economia',
+      message: 'Não há despesas disponíveis para simular.',
     };
   }
 
@@ -95,8 +95,8 @@ export function handleSavingsOpportunity({ topCategory, percentage = 10 }) {
 
   return {
     type: 'simulation',
-    title: 'Savings Simulation',
-    message: `Reducing ${categoryName} by ${percentage}% could save R$ ${monthlySavings.toLocaleString('BRL')} this month and R$ ${yearlySavings.toLocaleString('BRL')} per year.`,
+    title: 'Simulação de economia',
+    message: `Reduzir ${categoryName} em ${percentage}% economizaria ${monthlySavings.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} no mês e ${yearlySavings.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} no ano.`,
     data: {
       category: categoryName,
       originalAmount: categoryAmount,
@@ -114,8 +114,8 @@ export function handleSavingsOpportunity({ topCategory, percentage = 10 }) {
 export function handleStablePeriod() {
   return {
     type: 'recommendation',
-    title: 'Financial Overview',
-    message: 'Your finances are stable. Continue monitoring income and expenses to maintain this trend.',
+    title: 'Resumo financeiro',
+    message: 'As finanças estão estáveis. Continue acompanhando receitas e despesas.',
   };
 }
 
@@ -135,8 +135,8 @@ export function handleOpenSavedView({ filters = {}, viewName = '' } = {}) {
   qs.set('action', 'open_saved_view');
   return {
     type: 'navigation',
-    title: 'Open Saved View',
-    message: 'Navigating to your saved view.',
+    title: 'Abrir visão salva',
+    message: 'Abrindo a visão salva.',
     navigateTo: `/finance/history?${qs.toString()}`,
   };
 }
@@ -157,8 +157,8 @@ export function handleSaveViewAction({ category = '', type = 'expense', suggeste
   if (suggestedName) qs.set('suggestedName', suggestedName);
   return {
     type: 'navigation',
-    title: 'Save View',
-    message: 'Opening save view dialog.',
+    title: 'Salvar visão',
+    message: 'Abrindo o cadastro da visão.',
     navigateTo: `/finance/history?${qs.toString()}`,
   };
 }
@@ -179,15 +179,15 @@ export function executeAction(actionType, params = {}) {
     see_overview: () => handleStablePeriod(),
     review_negative: () => handleNegativeBalance(),
     open_saved_view: () => handleOpenSavedView(params),
-    save_view: () => handleSaveViewAction(),
+    save_view: () => handleSaveViewAction(params),
   };
 
   const handler = handlers[actionType];
   if (!handler) {
     return {
       type: 'recommendation',
-      title: 'Action',
-      message: 'Action not available.',
+      title: 'Ação',
+      message: 'Ação indisponível.',
     };
   }
 

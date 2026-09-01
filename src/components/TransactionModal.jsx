@@ -3,7 +3,7 @@
  * Modal para registro de novas transações financeiras.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, ArrowDownCircle, ArrowUpCircle, DollarSign, FileText, Calendar } from 'lucide-react';
 import { useTransactions } from '../context/TransactionContext';
 import { format } from 'date-fns';
@@ -13,45 +13,78 @@ const defaultForm = () => ({
   type: 'income',
   description: '',
   date: format(new Date(), 'yyyy-MM-dd'),
+  categoryId: '',
+  accountId: '',
 });
 
 export default function TransactionModal({ open, onClose }) {
-  const { addTransaction } = useTransactions();
+  const { addTransaction, categories, accounts } = useTransactions();
   const [form, setForm] = useState(defaultForm());
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const dialogRef = useRef(null);
+  const valueInputRef = useRef(null);
+  const returnFocusRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (open) {
       setForm(defaultForm());
       setSuccess(false);
+      setError('');
     }
   }, [open]);
 
-  // Fechar com Escape
   useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    if (!open) return undefined;
+    returnFocusRef.current = document.activeElement;
+    const frame = requestAnimationFrame(() => valueInputRef.current?.focus());
+    const handler = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const focusable = [...dialogRef.current.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')];
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
     document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [onClose]);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener('keydown', handler);
+      returnFocusRef.current?.focus?.();
+    };
+  }, [open]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.value || parseFloat(form.value) <= 0) return;
 
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 400)); // UX feedback
-
-    addTransaction({
-      value: parseFloat(form.value),
-      type: form.type,
-      description: form.description,
-      date: form.date,
-    });
-
-    setSaving(false);
-    setSuccess(true);
-    setTimeout(() => onClose(), 900);
+    setError('');
+    try {
+      await addTransaction({
+        value: parseFloat(form.value),
+        type: form.type,
+        description: form.description,
+        date: form.date,
+        categoryId: form.categoryId || null,
+        accountId: form.accountId || null,
+      });
+      setSuccess(true);
+      setTimeout(() => onClose(), 900);
+    } catch (saveError) {
+      setError(saveError.message || 'Não foi possível registrar a transação.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -61,6 +94,7 @@ export default function TransactionModal({ open, onClose }) {
   return (
     <div
       onClick={(e) => e.target === e.currentTarget && onClose()}
+      role="presentation"
       style={{
         position: 'fixed', inset: 0,
         background: 'rgba(0,0,0,0.7)',
@@ -74,7 +108,11 @@ export default function TransactionModal({ open, onClose }) {
       }}
     >
       <div
+        ref={dialogRef}
         className="card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="transaction-modal-title"
         style={{
           width: '100%',
           maxWidth: 460,
@@ -91,11 +129,12 @@ export default function TransactionModal({ open, onClose }) {
           alignItems: 'center',
           justifyContent: 'space-between',
         }}>
-          <h2 style={{ fontWeight: 700, fontSize: 18, letterSpacing: '-0.3px' }}>
+          <h2 id="transaction-modal-title" style={{ fontWeight: 700, fontSize: 18, letterSpacing: '-0.3px' }}>
             Nova Transação
           </h2>
           <button
             onClick={onClose}
+            aria-label="Fechar cadastro de transação"
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}
           >
             <X size={20} />
@@ -148,6 +187,8 @@ export default function TransactionModal({ open, onClose }) {
             <div style={{ position: 'relative' }}>
               <DollarSign size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input
+                ref={valueInputRef}
+                id="transaction-value"
                 type="number"
                 min="0.01"
                 step="0.01"
@@ -198,7 +239,43 @@ export default function TransactionModal({ open, onClose }) {
             </div>
           </div>
 
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label htmlFor="transaction-category" style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 8 }}>
+                Categoria
+              </label>
+              <select
+                id="transaction-category"
+                value={form.categoryId}
+                onChange={set('categoryId')}
+                className="input"
+              >
+                <option value="">Classificar depois</option>
+                {categories.filter((category) => category.type === form.type || category.type === 'both').map((category) => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="transaction-account" style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 8 }}>
+                Conta
+              </label>
+              <select
+                id="transaction-account"
+                value={form.accountId}
+                onChange={set('accountId')}
+                className="input"
+              >
+                <option value="">Conta principal</option>
+                {accounts.filter((account) => account.subtype === 'bank').map((account) => (
+                  <option key={account.id} value={account.id}>{account.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {/* Submit */}
+          {error && <p className="form-error" role="alert">{error}</p>}
           <button
             type="submit"
             disabled={saving || success}

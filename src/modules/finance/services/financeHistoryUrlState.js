@@ -11,10 +11,16 @@
 export function parseUrlState(searchParams) {
   const type = searchParams.get('type');
   const category = searchParams.get('category') || '';
+  const period = searchParams.get('period');
+  const status = searchParams.get('status');
+  const batchId = searchParams.get('batchId') || '';
 
   return {
     type: ['all', 'income', 'expense'].includes(type) ? type : 'all',
     category,
+    period: ['all', 'today', 'last5', 'last7', 'last30', 'thisMonth', 'custom'].includes(period) ? period : 'last30',
+    status: ['review', 'categorized', 'reconciled'].includes(status) ? status : '',
+    batchId,
   };
 }
 
@@ -33,6 +39,9 @@ export function buildQueryString(state) {
   if (state.category) {
     params.set('category', state.category);
   }
+  if (state.period && state.period !== 'last30') params.set('period', state.period);
+  if (state.status) params.set('status', state.status);
+  if (state.batchId) params.set('batchId', state.batchId);
 
   const qs = params.toString();
   return qs ? `?${qs}` : '';
@@ -59,5 +68,9 @@ export function mergeFilterState(searchParams, locationState = {}) {
     ? urlState.category
     : (locationState.category || '');
 
-  return { type, category };
+  const period = searchParams.has('period') ? urlState.period : (locationState.period || 'last30');
+  const status = searchParams.has('status') ? urlState.status : (locationState.status || '');
+  const batchId = searchParams.has('batchId') ? urlState.batchId : (locationState.batchId || '');
+
+  return { type, category, period, status, batchId };
 }

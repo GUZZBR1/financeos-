@@ -20,7 +20,7 @@ import PeriodFilter from '../../components/PeriodFilter';
 import TransactionRow from '../../components/TransactionRow';
 
 export default function FinanceHistory() {
-  const { transactions, loading } = useTransactions();
+  const { transactions, categories: availableCategories, loading } = useTransactions();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -33,11 +33,13 @@ export default function FinanceHistory() {
   );
 
   // Filters state
-  const [period, setPeriod] = useState(PERIOD_FILTERS.LAST_30);
+  const [period, setPeriod] = useState(filters.period);
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   const [typeFilter, setTypeFilter] = useState(filters.type);
   const [categoryFilter, setCategoryFilter] = useState(filters.category);
+  const [statusFilter, setStatusFilter] = useState(filters.status);
+  const [batchFilter, setBatchFilter] = useState(filters.batchId);
   const [sortBy, setSortBy] = useState('date-desc');
   const [search, setSearch] = useState('');
   const [savedViews, setSavedViews] = useState(() => getSavedViews());
@@ -49,7 +51,10 @@ export default function FinanceHistory() {
   useEffect(() => {
     setTypeFilter(filters.type);
     setCategoryFilter(filters.category);
-  }, [filters.type, filters.category]);
+    setPeriod(filters.period);
+    setStatusFilter(filters.status);
+    setBatchFilter(filters.batchId);
+  }, [filters.type, filters.category, filters.period, filters.status, filters.batchId]);
 
   // Track category views for memory (skip mount to avoid taint from URL state init)
   const categoryTrackRef = useRef(false);
@@ -65,15 +70,18 @@ export default function FinanceHistory() {
     const newState = {
       type: typeFilter,
       category: categoryFilter,
+      period,
+      status: statusFilter,
+      batchId: batchFilter,
     };
     const qs = buildQueryString(newState);
     const base = location.pathname;
     const target = `${base}${qs}`;
     // Avoid redundant navigate when URL is already correct
-    if (window.location.pathname + window.location.search !== target) {
+    if (`${location.pathname}${location.search}` !== target) {
       navigate(target, { replace: true, preventScrollReset: true });
     }
-  }, [typeFilter, categoryFilter]);
+  }, [typeFilter, categoryFilter, period, statusFilter, batchFilter, location.pathname, location.search, navigate]);
 
   // Clear location state after reading (prevents stale filters on back navigation)
   useEffect(() => {
@@ -96,7 +104,7 @@ export default function FinanceHistory() {
       setSaveInput(urlSuggestedName);
       setShowSaveInput(true);
     } else if (urlAction === 'open_saved_view') {
-      setActionContext(urlViewName ? `Opened from saved view: ${urlViewName}` : null);
+      setActionContext(urlViewName ? `Aberto pela visão salva: ${urlViewName}` : null);
     }
 
     // Clean action param from URL (one-time execution)
@@ -119,7 +127,7 @@ export default function FinanceHistory() {
     transactions
       .filter(t => t.type === 'expense')
       .forEach(t => {
-        const cat = t.description.split(' ').slice(0, 2).join(' ');
+        const cat = t.category || 'Não classificado';
         categoryTotals[cat] = (categoryTotals[cat] || 0) + t.value;
       });
     const sorted = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
@@ -127,27 +135,26 @@ export default function FinanceHistory() {
   }, [transactions]);
 
   // Extract unique categories from transactions
-  const categories = useMemo(() => {
-    const cats = new Set();
-    transactions.forEach(t => {
-      if (t.type === 'expense') {
-        const cat = t.description.split(' ').slice(0, 2).join(' ');
-        cats.add(cat);
-      }
-    });
-    return Array.from(cats).sort();
-  }, [transactions]);
+  const categories = useMemo(
+    () => availableCategories
+      .filter((category) => typeFilter === 'all' || category.type === typeFilter || category.type === 'both')
+      .map((category) => category.name),
+    [availableCategories, typeFilter],
+  );
 
   // Reset all filters and URL to consistent clean state
   const resetFilters = () => {
     setTypeFilter('all');
     setCategoryFilter('');
+    setPeriod(PERIOD_FILTERS.LAST_30);
+    setStatusFilter('');
+    setBatchFilter('');
     setSearch('');
     // Directly navigate to clean URL (period/search are local-only, no URL sync needed)
     navigate(location.pathname, { replace: true, preventScrollReset: true });
   };
 
-  const hasActiveFilters = typeFilter !== 'all' || categoryFilter !== '' || search.trim();
+  const hasActiveFilters = typeFilter !== 'all' || categoryFilter !== '' || period !== PERIOD_FILTERS.LAST_30 || statusFilter || batchFilter || search.trim();
 
   // Quick view handlers
   const applyQuickView = (view) => {
@@ -155,6 +162,9 @@ export default function FinanceHistory() {
       case 'all':
         setTypeFilter('all');
         setCategoryFilter('');
+        setPeriod(PERIOD_FILTERS.ALL);
+        setStatusFilter('');
+        setBatchFilter('');
         break;
       case 'income':
         setTypeFilter('income');
@@ -184,7 +194,7 @@ export default function FinanceHistory() {
 
   const handleSaveView = () => {
     if (!saveInput.trim()) {
-      setSaveFeedback('Please enter a name');
+      setSaveFeedback('Informe um nome');
       setTimeout(() => setSaveFeedback(''), 3000);
       return;
     }
@@ -195,9 +205,9 @@ export default function FinanceHistory() {
       setShowSaveInput(false);
       setSaveFeedback('');
     } else {
-      if (result.reason === 'duplicate') setSaveFeedback('A view with this name already exists');
-      else if (result.reason === 'limit') setSaveFeedback('Maximum 10 views reached');
-      else setSaveFeedback('Failed to save view');
+      if (result.reason === 'duplicate') setSaveFeedback('Já existe uma visão com esse nome');
+      else if (result.reason === 'limit') setSaveFeedback('O limite é de 10 visões');
+      else setSaveFeedback('Não foi possível salvar a visão');
       setTimeout(() => setSaveFeedback(''), 3000);
     }
   };
@@ -210,14 +220,16 @@ export default function FinanceHistory() {
   // Build context indicator message
   const contextMessage = useMemo(() => {
     const parts = [];
-    if (typeFilter === 'income') parts.push('Income');
-    if (typeFilter === 'expense') parts.push('Expenses');
+    if (typeFilter === 'income') parts.push('receitas');
+    if (typeFilter === 'expense') parts.push('despesas');
     if (categoryFilter) parts.push(categoryFilter);
+    if (batchFilter) parts.push('lote importado');
+    if (statusFilter === 'review') parts.push('aguardando revisão');
     if (parts.length > 0) {
-      return `Viewing: ${parts.join(' ')} transactions`;
+      return `Visualizando transações de ${parts.join(' · ')}`;
     }
     return null;
-  }, [typeFilter, categoryFilter]);
+  }, [typeFilter, categoryFilter, batchFilter, statusFilter]);
 
   // Pipeline de filtragem e ordenação
   const processed = useMemo(() => {
@@ -227,9 +239,12 @@ export default function FinanceHistory() {
       result = result.filter((t) => t.type === typeFilter);
     }
 
+    if (batchFilter) result = result.filter((transaction) => transaction.importBatchId === batchFilter);
+    if (statusFilter) result = result.filter((transaction) => transaction.status === statusFilter);
+
     if (categoryFilter.trim()) {
       result = result.filter((t) => {
-        const cat = t.description.split(' ').slice(0, 2).join(' ');
+        const cat = t.category || 'Não classificado';
         return cat === categoryFilter;
       });
     }
@@ -250,7 +265,7 @@ export default function FinanceHistory() {
     });
 
     return result;
-  }, [transactions, period, customStart, customEnd, typeFilter, categoryFilter, sortBy, search]);
+  }, [transactions, period, customStart, customEnd, typeFilter, categoryFilter, statusFilter, batchFilter, sortBy, search]);
 
   // Totais do resultado filtrado
   const totals = useMemo(() => ({
@@ -263,7 +278,7 @@ export default function FinanceHistory() {
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-1px', marginBottom: 4 }}>
-          Financial History
+          Histórico financeiro
         </h1>
         <p style={{ fontSize: 14, color: 'var(--text-muted)' }}>
           Todos os seus movimentos registrados
@@ -278,11 +293,11 @@ export default function FinanceHistory() {
         flexWrap: 'wrap',
         alignItems: 'center'
       }}>
-        <span style={{ fontSize: 12, color: 'var(--text-muted)', marginRight: 4 }}>Quick Views:</span>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', marginRight: 4 }}>Visões rápidas:</span>
         {[
-          { id: 'all', label: 'All', icon: <LayoutList size={12} /> },
-          { id: 'income', label: 'Income', icon: <TrendingUp size={12} /> },
-          { id: 'expense', label: 'Expenses', icon: <TrendingDown size={12} /> },
+          { id: 'all', label: 'Todas', icon: <LayoutList size={12} /> },
+          { id: 'income', label: 'Receitas', icon: <TrendingUp size={12} /> },
+          { id: 'expense', label: 'Despesas', icon: <TrendingDown size={12} /> },
           ...(topCategory ? [{ id: 'top-category', label: topCategory[0], icon: <Star size={12} /> }] : []),
         ].map(({ id, label, icon }) => (
           <button
@@ -318,7 +333,7 @@ export default function FinanceHistory() {
         flexWrap: 'wrap',
         alignItems: 'center'
       }}>
-        <span style={{ fontSize: 12, color: 'var(--text-muted)', marginRight: 4 }}>Saved Views:</span>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', marginRight: 4 }}>Visões salvas:</span>
 
         {savedViews.map((view) => (
           <div
@@ -359,7 +374,7 @@ export default function FinanceHistory() {
                 value={saveInput}
                 onChange={(e) => setSaveInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSaveView()}
-                placeholder="View name..."
+                placeholder="Nome da visão..."
                 autoFocus
                 style={{
                   padding: '5px 8px',
@@ -372,7 +387,7 @@ export default function FinanceHistory() {
                 }}
               />
               {saveFeedback && (
-                <span style={{ fontSize: 10, color: saveFeedback.includes('exists') || saveFeedback.includes('Maximum') ? 'var(--accent-red)' : 'var(--text-muted)' }}>
+                <span style={{ fontSize: 10, color: 'var(--accent-red)' }}>
                   {saveFeedback}
                 </span>
               )}
@@ -381,13 +396,13 @@ export default function FinanceHistory() {
               onClick={handleSaveView}
               style={{ padding: '5px 8px', fontSize: 11, borderRadius: '6px', background: 'var(--primary, #3b82f6)', color: '#fff', border: 'none', cursor: 'pointer' }}
             >
-              Save
+              Salvar
             </button>
             <button
               onClick={() => { setShowSaveInput(false); setSaveInput(''); }}
               style={{ padding: '5px 8px', fontSize: 11, borderRadius: '6px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', cursor: 'pointer' }}
             >
-              Cancel
+              Cancelar
             </button>
           </div>
         ) : (
@@ -409,7 +424,7 @@ export default function FinanceHistory() {
               transition: 'all var(--transition)',
             }}
           >
-            + Save current view
+            + Salvar visão atual
           </button>
         )}
       </div>
@@ -423,6 +438,7 @@ export default function FinanceHistory() {
           customStart={customStart}
           customEnd={customEnd}
           onCustomChange={handleCustomChange}
+          includeAll
         />
 
         {/* Segunda linha de filtros */}
@@ -444,8 +460,8 @@ export default function FinanceHistory() {
           <div style={{ display: 'flex', gap: 6 }}>
             {[
               { value: 'all', label: 'Todos' },
-              { value: 'income', label: '↓ Entradas' },
-              { value: 'expense', label: '↑ Saídas' },
+              { value: 'income', label: '↓ Créditos' },
+              { value: 'expense', label: '↑ Débitos' },
             ].map(({ value, label }) => (
               <button
                 key={value}
@@ -548,13 +564,13 @@ export default function FinanceHistory() {
           </span>
         </div>
         <div className="card" style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Entradas:</span>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Créditos:</span>
           <span style={{ fontSize: 13, fontFamily: 'var(--font-mono)', color: 'var(--accent-green)', fontWeight: 500 }}>
             {formatCurrency(totals.income)}
           </span>
         </div>
         <div className="card" style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Saídas:</span>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Débitos:</span>
           <span style={{ fontSize: 13, fontFamily: 'var(--font-mono)', color: 'var(--accent-red)', fontWeight: 500 }}>
             {formatCurrency(totals.expense)}
           </span>
@@ -570,7 +586,8 @@ export default function FinanceHistory() {
         ) : processed.length === 0 ? (
           <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)' }}>
             <p style={{ fontSize: 16, marginBottom: 8 }}>Nenhum movimento encontrado</p>
-            <p style={{ fontSize: 13 }}>Tente ajustar os filtros ou adicione novos movimentos</p>
+            <p style={{ fontSize: 13, marginBottom: 16 }}>{transactions.length > 0 ? `Existem ${transactions.length} movimentos fora dos filtros atuais.` : 'Importe um OFX ou adicione um novo movimento.'}</p>
+            {transactions.length > 0 && period !== PERIOD_FILTERS.ALL && <button className="btn btn-primary" onClick={() => setPeriod(PERIOD_FILTERS.ALL)}>Ver todo o histórico</button>}
           </div>
         ) : (
           processed.map((t) => (

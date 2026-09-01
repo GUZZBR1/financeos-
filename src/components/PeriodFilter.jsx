@@ -6,16 +6,18 @@
 import { PERIOD_FILTERS, PERIOD_LABELS } from '../services/calculations';
 import { CalendarDays } from 'lucide-react';
 
-export default function PeriodFilter({ value, onChange, customStart, customEnd, onCustomChange }) {
-  const filters = Object.values(PERIOD_FILTERS);
+export default function PeriodFilter({ value, onChange, customStart, customEnd, onCustomChange, includeAll = false }) {
+  const filters = Object.values(PERIOD_FILTERS).filter((filter) => includeAll || filter !== PERIOD_FILTERS.ALL);
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+    <div aria-label="Filtro por período" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
       {/* Period pills */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+      <div role="group" aria-label="Períodos disponíveis" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
         {filters.filter(f => f !== PERIOD_FILTERS.CUSTOM).map((filter) => (
           <button
+            type="button"
             key={filter}
+            aria-pressed={value === filter}
             onClick={() => onChange(filter)}
             style={{
               padding: '6px 14px',
@@ -37,6 +39,8 @@ export default function PeriodFilter({ value, onChange, customStart, customEnd, 
 
         {/* Custom period */}
         <button
+          type="button"
+          aria-pressed={value === PERIOD_FILTERS.CUSTOM}
           onClick={() => onChange(PERIOD_FILTERS.CUSTOM)}
           style={{
             padding: '6px 14px',
@@ -68,16 +72,18 @@ export default function PeriodFilter({ value, onChange, customStart, customEnd, 
           flexWrap: 'wrap',
           animation: 'fadeIn 0.2s ease',
         }}>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>De</span>
+          <label htmlFor="period-custom-start" style={{ fontSize: 12, color: 'var(--text-muted)' }}>De</label>
           <input
+            id="period-custom-start"
             type="date"
             value={customStart || ''}
             onChange={(e) => onCustomChange('start', e.target.value)}
             className="input"
             style={{ width: 150, padding: '6px 10px', fontSize: 12, colorScheme: 'dark', fontFamily: 'var(--font-mono)' }}
           />
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>até</span>
+          <label htmlFor="period-custom-end" style={{ fontSize: 12, color: 'var(--text-muted)' }}>até</label>
           <input
+            id="period-custom-end"
             type="date"
             value={customEnd || ''}
             onChange={(e) => onCustomChange('end', e.target.value)}
